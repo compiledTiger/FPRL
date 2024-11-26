@@ -3,12 +3,12 @@
 #include "Vec2D.h"
 
 struct Mat2D {
-    float r0c0;
-    float r0c1;
-    float r1c0;
-    float r1c1;
+    double r0c0;
+    double r0c1;
+    double r1c0;
+    double r1c1;
 
-    Mat2D(float r0c0_, float r0c1_, float r1c0_, float r1c1_)
+    Mat2D(double r0c0_, double r0c1_, double r1c0_, double r1c1_)
         : r0c0(r0c0_), r0c1(r0c1_), r1c0(r1c0_), r1c1(r1c1_) {}
 
     Vec2D operator*(const Vec2D& rhs) {
