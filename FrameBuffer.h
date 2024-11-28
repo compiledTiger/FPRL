@@ -1,6 +1,10 @@
 #pragma once
 
-class SDL_Renderer;
+#include <SDL2/SDL.h>
+
+#include <iostream>
+
+#include "Color.h"
 
 class FrameBuffer {
    public:
@@ -52,6 +56,28 @@ class FrameBuffer {
         locked = false;
         return true;
     }
+
+    void drawPixel(int x, int y, Color c) { drawPixel(at(x, y), c); }
+
+    void drawPixel(unsigned char* byte, Color c) {
+        *byte++ = c.a;
+        *byte++ = c.b;
+        *byte++ = c.g;
+        *byte++ = c.r;
+    }
+
+    void drawRect(int x, int y, int w, int h, Color c, bool centered = false) {
+        if (centered) {
+            x -= w / 2;
+            y -= h / 2;
+        }
+        for (int row = 0; row < h; ++row) {
+            for (int column = 0; column < w; ++column) {
+                drawPixel(x + column, y + row, c);
+            }
+        }
+    }
+
     const int bytesPerPixel = 4;
     const int width;
     const int height;

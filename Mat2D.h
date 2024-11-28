@@ -1,5 +1,7 @@
 #pragma once
 
+#include <math.h>
+
 #include "Vec2D.h"
 
 struct Mat2D {
@@ -15,3 +17,7 @@ struct Mat2D {
         return Vec2D(r0c0 * rhs.x + r0c1 * rhs.y, r1c0 * rhs.x + r1c1 * rhs.y);
     }
 };
+
+Mat2D rotationM(double rad) {
+    return Mat2D(std::cos(rad), -std::sin(rad), std::sin(rad), std::cos(rad));
+}

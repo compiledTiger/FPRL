@@ -1,16 +1,15 @@
 #include <set>
 
+#include "Being.h"
+#include "Constants.h"
 #include "Window.h"
-#include "Mat2D.h"
 
 int main(int argc, char* argv[]) {
     Window w;
     FrameBuffer fb(w.sdlRenderer);
     std::set<SDL_Keycode> pressedKeys;
 
-    Vec2D pos (320, 240);
-    Vec2D dir (0, -1);
-    Vec2D vel (0, 0);
+    Being player(Vec2D(320, 240));
 
     // clang-format off
     char map[16*16] = {
@@ -48,38 +47,32 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if (pressedKeys.find(SDLK_w) != pressedKeys.end()) vel+=dir;
-        if (pressedKeys.find(SDLK_s) != pressedKeys.end()) vel-=dir;
+        if (pressedKeys.find(SDLK_h) != pressedKeys.end())
+            player.vel -= rotationM(PI / 2) * player.dir * 0.5;
+        if (pressedKeys.find(SDLK_j) != pressedKeys.end())
+            player.vel -= player.dir * 0.5;
+        if (pressedKeys.find(SDLK_k) != pressedKeys.end())
+            player.vel += player.dir * 0.5;
+        if (pressedKeys.find(SDLK_l) != pressedKeys.end())
+            player.vel += rotationM(PI / 2) * player.dir * 0.5;
+        if (pressedKeys.find(SDLK_q) != pressedKeys.end())
+            player.rotate(-PI / 60);
+        if (pressedKeys.find(SDLK_w) != pressedKeys.end())
+            player.rotate(PI / 60);
 
-        vel *= 0.9;
-        pos += vel;
+        player.update();
 
         // Clear buffer
         for (int i = 0; i < fb.bufferSize; ++i) fb.buffer[i] = 0;
 
         // Draw map
         for (int i = 0; i < 16 * 16; ++i) {
-            for (int j = 0; j < 30; ++j) {
-                auto* byte = fb.at((i % 16) * 30, (i / 16) * 30 + j);
-                for (int k = 0; k < 30; ++k) {
-                    *byte++ = 255;  // A
-                    *byte++ = 0;    // B
-                    *byte++ = 40;  // G
-                    *byte++ = 120*map[i];  // R
-                }
-            }
+            fb.drawRect((i % 16) * 30, (i / 16) * 30, 29, 29,
+                        Color(120 * map[i], 40, 0));
         }
 
-        // Draw player
-        for (int i = 0; i < 10; ++i) {
-            auto* byte = fb.at(pos.x, pos.y + i);
-            for (int j = 0; j < 10; ++j) {
-                *byte++ = 255;  // A
-                *byte++ = 255;  // B
-                *byte++ = 0;    // G
-                *byte++ = 0;    // R
-            }
-        }
+        player.draw(fb);
+        player.drawDebug(fb);
 
         fb.copyBuffer();
         SDL_SetRenderDrawColor(w.sdlRenderer, 0x20, 0xAA, 0x20, 0xFF);
