@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
     FrameBuffer fb(w.sdlRenderer);
     std::set<SDL_Keycode> pressedKeys;
 
-    Being player(Vec2D(320, 240));
+    Being player(Vec2D(10, 5));
 
     // clang-format off
     char map[16*16] = {
@@ -48,16 +48,16 @@ int main(int argc, char* argv[]) {
         }
 
         if (pressedKeys.find(SDLK_h) != pressedKeys.end())
-            player.vel -= rotationM(PI / 2) * player.dir * 0.5;
+            player.vel -= rotationM(PI / 2) * player.dir * 0.05;
         if (pressedKeys.find(SDLK_j) != pressedKeys.end())
-            player.vel -= player.dir * 0.5;
+            player.vel -= player.dir * 0.05;
         if (pressedKeys.find(SDLK_k) != pressedKeys.end())
-            player.vel += player.dir * 0.5;
+            player.vel += player.dir * 0.05;
         if (pressedKeys.find(SDLK_l) != pressedKeys.end())
-            player.vel += rotationM(PI / 2) * player.dir * 0.5;
+            player.vel += rotationM(PI / 2) * player.dir * 0.05;
         if (pressedKeys.find(SDLK_q) != pressedKeys.end())
             player.rotate(-PI / 60);
-        if (pressedKeys.find(SDLK_w) != pressedKeys.end())
+        if (pressedKeys.find(SDLK_e) != pressedKeys.end())
             player.rotate(PI / 60);
 
         player.update();
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
         }
 
         player.draw(fb);
-        player.drawDebug(fb);
+        player.drawDebug(fb, &map[0]);
 
         fb.copyBuffer();
         SDL_SetRenderDrawColor(w.sdlRenderer, 0x20, 0xAA, 0x20, 0xFF);

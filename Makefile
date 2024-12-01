@@ -2,7 +2,7 @@ OBJS = App.cc
 
 CC = g++
 
-COMPILER_FLAGS =
+COMPILER_FLAGS = -g
 
 LINKER_FLAGS = -lSDL2
 
