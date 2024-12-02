@@ -9,6 +9,9 @@ struct Vec2D {
     Vec2D operator+(const Vec2D& rhs) { return Vec2D(x + rhs.x, y + rhs.y); }
     Vec2D operator-(const Vec2D& rhs) { return Vec2D(x - rhs.x, y - rhs.y); }
     Vec2D operator*(const double& f) { return Vec2D(x * f, y * f); }
+    Vec2D operator/(const double& f) { return Vec2D(x / f, y / f); }
+    Vec2D norm() { return *this / mag(); }
+    double mag(){return std::sqrt(x * x + y * y);};
     double dot(const Vec2D& rhs) { return x * rhs.x + y * rhs.y; }
 
     Vec2D& operator+=(const Vec2D& rhs) {
@@ -24,6 +27,11 @@ struct Vec2D {
     Vec2D& operator*=(const double& f) {
         x *= f;
         y *= f;
+        return *this;
+    }
+    Vec2D& operator/=(const double& f) {
+        x /= f;
+        y /= f;
         return *this;
     }
 };

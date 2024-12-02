@@ -28,15 +28,21 @@ struct Being {
 
     void drawDebug(FrameBuffer& fb, char* map) {
         int scaling = 30;
-        auto p = pos * 30 + view * scaling;
-        fb.drawRect(p.x, p.y, 5, 5, Color(255, 255, 255), true);
-        p -= cam * scaling;
-        fb.drawRect(p.x, p.y, 5, 5, Color(255, 255, 255), true);
-        p += cam * scaling * 2;
-        fb.drawRect(p.x, p.y, 5, 5, Color(255, 255, 255), true);
+        auto drawRect = [&](Vec2D v, Color c) {
+            fb.drawRect(v.x * 30, v.y * 30, 5, 5, c);
+        };
+        auto drawW = [&](Vec2D v) { drawRect(v, Color(255, 255, 255)); };
 
-        for (double screenX = 0; screenX < fb.width; ++screenX) {
-            Vec2D ray = view + (cam * (screenX / fb.width * 2.0 - 1.0));
+        auto p = pos + view;
+        drawW(p);
+        p -= cam;
+        drawW(p);
+        p += cam * 2;
+        drawW(p);
+
+        int columns = fb.width;
+        for (double screenX = 0; screenX < columns; ++screenX) {
+            Vec2D ray = view + (cam * (screenX / columns * 2.0 - 1.0));
             Vec2D rayPos = pos;
 
             int index = (int)rayPos.y * 16 + (int)rayPos.x;
@@ -47,33 +53,35 @@ struct Being {
             int rayTargetX = (int)rayPos.x + xDir;
             int rayTargetY = (int)rayPos.y + yDir;
 
-            while (map[index] == 0 && ++iter < 3) {
+            while (map[index] == 0 && ++iter < 5) {
                 double wallDistX = rayTargetX - rayPos.x;
                 double wallDistY = rayTargetY - rayPos.y;
 
-                if (std::abs(wallDistX) < std::abs(wallDistY)) {
+                if (wallDistX * wallDistX +
+                        (wallDistX / ratio) * (wallDistX / ratio) <
+                    wallDistY * wallDistY +
+                        (wallDistY * ratio) * (wallDistY * ratio)) {
                     rayPos.x += wallDistX;
                     rayPos.y += wallDistX / ratio;
-                    rayTargetX += xDir*2 - 1;
+                    rayTargetX += xDir * 2 - 1;
                 } else {
                     rayPos.y += wallDistY;
                     rayPos.x += wallDistY * ratio;
-                    rayTargetY += yDir*2 - 1;
+                    rayTargetY += yDir * 2 - 1;
                 }
+
                 std::cout << "pos    " << pos.x << " " << pos.y << std::endl;
                 std::cout << "raypos " << rayPos.x << " " << rayPos.y
                           << std::endl;
-                index = (int)rayPos.y * 16 + (int)rayPos.x;
+
+                index = (int)((rayPos.y + rayTargetY) / 2.0) * 16 +
+                        (int)((rayPos.x + rayTargetX) / 2.0);
                 if (index > 255) index = 255;
                 if (index < 0) index = 0;
                 std::cout << index << " index" << std::endl;
+                drawRect(rayPos, Color(50, 50, screenX / columns * 255));
             }
-            if (map[index] && rayPos.x > 0 && rayPos.x*30 < fb.width && rayPos.y > 0 &&
-                rayPos.y*30 < fb.height)
-            fb.drawRect(rayPos.x * 30, rayPos.y * 30, 5, 5,
-                        Color(255, 255, 255), true);
-            fb.drawRect((pos + ray).x * 30, (pos + ray).y * 30, 5, 5,
-                        Color(255, 255, 255), true);
+            if (map[index]) drawW(rayPos);
         }
     }
 
