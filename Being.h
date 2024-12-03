@@ -53,7 +53,7 @@ struct Being {
             int rayTargetX = (int)rayPos.x + xDir;
             int rayTargetY = (int)rayPos.y + yDir;
 
-            while (map[index] == 0 && ++iter < 5) {
+            while (map[index] == 0 && ++iter < 10) {
                 double wallDistX = rayTargetX - rayPos.x;
                 double wallDistY = rayTargetY - rayPos.y;
 
@@ -70,15 +70,15 @@ struct Being {
                     rayTargetY += yDir * 2 - 1;
                 }
 
-                std::cout << "pos    " << pos.x << " " << pos.y << std::endl;
-                std::cout << "raypos " << rayPos.x << " " << rayPos.y
-                          << std::endl;
+                // std::cout << "pos    " << pos.x << " " << pos.y << std::endl;
+                // std::cout << "raypos " << rayPos.x << " " << rayPos.y
+                //           << std::endl;
 
                 index = (int)((rayPos.y + rayTargetY) / 2.0) * 16 +
                         (int)((rayPos.x + rayTargetX) / 2.0);
                 if (index > 255) index = 255;
                 if (index < 0) index = 0;
-                std::cout << index << " index" << std::endl;
+                // std::cout << index << " index" << std::endl;
                 drawRect(rayPos, Color(50, 50, screenX / columns * 255));
             }
             if (map[index]) drawW(rayPos);
