@@ -60,8 +60,9 @@ class FrameBuffer {
     void drawPixel(int x, int y, Color c) {
         if (x >= 0 && x < width && y >= 0 && y < height)
             drawPixel(at(x, y), c);
-        else
-            std::cout << "Warning: out of bounds drawPixel" << std::endl;
+        else {
+            // std::cout << "Warning: out of bounds drawPixel" << std::endl;
+        }
     }
 
     void drawPixel(unsigned char* byte, Color c) {

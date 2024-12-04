@@ -14,16 +14,16 @@ int main(int argc, char* argv[]) {
     // clang-format off
     char map[16*16] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
         0, 0, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0,
+        0, 0, 0, 0, 3, 2, 2, 1, 1, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -31,9 +31,11 @@ int main(int argc, char* argv[]) {
     };
     // clang-format on
 
+    bool debug = false;
     bool quit = false;
     while (!quit) {
         SDL_Event e;
+        std::set<SDL_Keycode> releasedKeys;
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT)
                 quit = true;
@@ -44,6 +46,7 @@ int main(int argc, char* argv[]) {
             } else if (e.type == SDL_KEYUP) {
                 auto key = e.key.keysym.sym;
                 pressedKeys.erase(key);
+                releasedKeys.insert(key);
             }
         }
 
@@ -59,20 +62,20 @@ int main(int argc, char* argv[]) {
             player.rotate(-PI / 60);
         if (pressedKeys.find(SDLK_e) != pressedKeys.end())
             player.rotate(PI / 60);
+        if (pressedKeys.find(SDLK_e) != pressedKeys.end())
+            player.rotate(PI / 60);
+        if (releasedKeys.find(SDLK_d) != releasedKeys.end()) debug = !debug;
 
         player.update();
 
         // Clear buffer
         for (int i = 0; i < fb.bufferSize; ++i) fb.buffer[i] = 0;
 
-        // Draw map
-        for (int i = 0; i < 16 * 16; ++i) {
-            fb.drawRect((i % 16) * 30, (i / 16) * 30, 29, 29,
-                        Color(120 * map[i], 40, 0));
+        if (!debug) {
+            player.drawView(fb, &map[0]);
+        } else {
+            player.drawDebug(fb, &map[0]);
         }
-
-        player.draw(fb);
-        player.drawDebug(fb, &map[0]);
 
         fb.copyBuffer();
         SDL_SetRenderDrawColor(w.sdlRenderer, 0x20, 0xAA, 0x20, 0xFF);
