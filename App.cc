@@ -16,13 +16,13 @@ int main(int argc, char* argv[]) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
         0, 0, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0,
         0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0,
         0, 0, 0, 0, 3, 2, 2, 1, 1, 0, 0, 0, 1, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 0, 3, 2, 1, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -50,20 +50,20 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        double speed = 0.02;
+        double rotationSpeed = PI / 80;
         if (pressedKeys.find(SDLK_h) != pressedKeys.end())
-            player.vel -= rotationM(PI / 2) * player.dir * 0.05;
+            player.vel -= rotationM(PI / 2) * player.dir * speed;
         if (pressedKeys.find(SDLK_j) != pressedKeys.end())
-            player.vel -= player.dir * 0.05;
+            player.vel -= player.dir * speed;
         if (pressedKeys.find(SDLK_k) != pressedKeys.end())
-            player.vel += player.dir * 0.05;
+            player.vel += player.dir * speed;
         if (pressedKeys.find(SDLK_l) != pressedKeys.end())
-            player.vel += rotationM(PI / 2) * player.dir * 0.05;
+            player.vel += rotationM(PI / 2) * player.dir * speed;
         if (pressedKeys.find(SDLK_q) != pressedKeys.end())
-            player.rotate(-PI / 60);
+            player.rotate(-rotationSpeed);
         if (pressedKeys.find(SDLK_e) != pressedKeys.end())
-            player.rotate(PI / 60);
-        if (pressedKeys.find(SDLK_e) != pressedKeys.end())
-            player.rotate(PI / 60);
+            player.rotate(rotationSpeed);
         if (releasedKeys.find(SDLK_d) != releasedKeys.end()) debug = !debug;
 
         player.update();

@@ -25,21 +25,26 @@ struct Being {
     void drawView(FrameBuffer& fb, char* map) {
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
-            Vec2D ray = view + (cam * (screenX / columns * 2.0 - 1.0));
-            double dist = dda(fb, map, ray);
-            if (dist > 0) {
-                int wallHeight = 255 / dist;
+            double fov = 0.7;
+            Vec2D ray = view + (cam * (screenX / columns * 2.0 - 1.0) * fov);
+            auto hit = dda(fb, map, ray);
+            if (hit) {
+                double dist = hit->first;
+                int mapIndex = hit->second;
+                int wallHeight = 255 / (dist + 0.001);
+                if (wallHeight > 1000) wallHeight = 1000;
                 for (int screenY = (fb.height - wallHeight) / 2;
                      screenY < (fb.height + wallHeight) / 2; ++screenY) {
-                    fb.drawPixel(
-                        screenX, screenY,
-                        Color(100 / (0.5 * dist * dist + 1) + 100, 70, 70));
+                    fb.drawPixel(screenX, screenY,
+                                 Color(100 / (0.5 * dist * dist + 1) + 100,
+                                       80 * map[mapIndex], 70));
                 }
             }
         }
     }
 
-    double dda(FrameBuffer& fb, char* map, Vec2D ray, bool debug = false) {
+    std::optional<std::pair<double, int>> dda(FrameBuffer& fb, char* map,
+                                              Vec2D ray, bool debug = false) {
         Vec2D rayPos = pos;
 
         int index = (int)rayPos.y * 16 + (int)rayPos.x;
@@ -50,7 +55,7 @@ struct Being {
         int rayTargetX = (int)rayPos.x + xDir;
         int rayTargetY = (int)rayPos.y + yDir;
 
-        while (index != -1 && map[index] == 0 && ++iter < 10) {
+        while (index != -1 && map[index] == 0 && ++iter < 20) {
             double wallDistX = rayTargetX - rayPos.x;
             double wallDistY = rayTargetY - rayPos.y;
 
@@ -77,9 +82,9 @@ struct Being {
                             Color(100, 30, 200));
         }
         if (index != -1 && map[index])
-            return (rayPos - pos).dot(view.norm());
+            return std::make_pair((rayPos - pos).dot(view.norm()), index);
         else
-            return -1;
+            return std::nullopt;
     }
 
     void drawDebug(FrameBuffer& fb, char* map) {
