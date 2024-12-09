@@ -4,6 +4,7 @@
 
 #include "Color.h"
 #include "FrameBuffer.h"
+#include "Map.h"
 #include "Mat2D.h"
 #include "Vec2D.h"
 
@@ -22,29 +23,41 @@ struct Being {
         pos += vel;
     }
 
-    void drawView(FrameBuffer& fb, char* map) {
+    struct ddaHit {
+        double dist;
+        int mapIndex;                      // TODO remove
+        WallTexture<32, 32>* wallTexture;  // TODO guaranteed non-null?
+        double wallPos;
+    };
+
+    void drawView(FrameBuffer& fb, Map<16>& map) {
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
             double fov = 0.7;
             Vec2D ray = view + (cam * (screenX / columns * 2.0 - 1.0) * fov);
             auto hit = dda(fb, map, ray);
             if (hit) {
-                double dist = hit->first;
-                int mapIndex = hit->second;
-                int wallHeight = 255 / (dist + 0.001);
+                int wallHeight = 255 / (hit->dist + 0.001);
                 if (wallHeight > 1000) wallHeight = 1000;
+
+                double texelY = 0;
+                // TODO clip
                 for (int screenY = (fb.height - wallHeight) / 2;
                      screenY < (fb.height + wallHeight) / 2; ++screenY) {
-                    fb.drawPixel(screenX, screenY,
-                                 Color(100 / (0.5 * dist * dist + 1) + 100,
-                                       80 * map[mapIndex], 70));
+                    int texelX = hit->wallPos * hit->wallTexture->width;
+                    fb.drawPixel(
+                        screenX, screenY,
+                        hit->wallTexture->at(texelX, (int)texelY) +
+                            Color(100 / (0.5 * hit->dist * hit->dist + 1), 0,
+                                  0));
+                    texelY += ((double)hit->wallTexture->height) / wallHeight;
                 }
             }
         }
     }
 
-    std::optional<std::pair<double, int>> dda(FrameBuffer& fb, char* map,
-                                              Vec2D ray, bool debug = false) {
+    std::optional<ddaHit> dda(FrameBuffer& fb, Map<16>& map, Vec2D ray,
+                              bool debug = false) {
         Vec2D rayPos = pos;
 
         int index = (int)rayPos.y * 16 + (int)rayPos.x;
@@ -54,8 +67,10 @@ struct Being {
         int yDir = ray.y > 0;
         int rayTargetX = (int)rayPos.x + xDir;
         int rayTargetY = (int)rayPos.y + yDir;
+        double wallPos = 0;
+        WallTexture<32, 32>* wallTexture;
 
-        while (index != -1 && map[index] == 0 && ++iter < 20) {
+        while (index != -1 && map[index] == nullptr && ++iter < 20) {
             double wallDistX = rayTargetX - rayPos.x;
             double wallDistY = rayTargetY - rayPos.y;
 
@@ -66,11 +81,17 @@ struct Being {
                 rayPos.x += wallDistX;
                 rayPos.y += wallDistX / ratio;
                 rayTargetX += xDir * 2 - 1;
+                wallPos = rayPos.y - (int)rayPos.y;
             } else {
                 rayPos.y += wallDistY;
                 rayPos.x += wallDistY * ratio;
                 rayTargetY += yDir * 2 - 1;
+                wallPos = rayPos.x - (int)rayPos.x;
             }
+
+            if (rayPos.x < 0 || rayPos.x >= map.length || rayPos.y < 0 ||
+                rayPos.y >= map.length)
+                break;
 
             index = (int)((rayPos.y + rayTargetY) / 2.0) * 16 +
                     (int)((rayPos.x + rayTargetX) / 2.0);
@@ -82,16 +103,17 @@ struct Being {
                             Color(100, 30, 200));
         }
         if (index != -1 && map[index])
-            return std::make_pair((rayPos - pos).dot(view.norm()), index);
+            return ddaHit{(rayPos - pos).dot(view.norm()), index, map[index],
+                          wallPos};
         else
             return std::nullopt;
     }
 
-    void drawDebug(FrameBuffer& fb, char* map) {
+    void drawDebug(FrameBuffer& fb, Map<16>& map) {
         // Draw map
         for (int i = 0; i < 16 * 16; ++i) {
             fb.drawRect((i % 16) * 30, (i / 16) * 30, 29, 29,
-                        Color(80 * map[i], 70 * map[i], 70));
+                        Color(80 * (bool)map[i], 70 * (bool)map[i], 70));
         }
 
         int scaling = 30;

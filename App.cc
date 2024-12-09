@@ -2,6 +2,7 @@
 
 #include "Being.h"
 #include "Constants.h"
+#include "Map.h"
 #include "Window.h"
 
 int main(int argc, char* argv[]) {
@@ -11,25 +12,8 @@ int main(int argc, char* argv[]) {
 
     Being player(Vec2D(10, 5));
 
-    // clang-format off
-    char map[16*16] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
-        0, 0, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0,
-        0, 0, 0, 0, 3, 2, 2, 1, 1, 0, 0, 0, 1, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 1, 0, 3, 2, 1, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    };
-    // clang-format on
+    Map<16> map;
+    map.generate();
 
     bool debug = false;
     bool quit = false;
@@ -72,9 +56,9 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < fb.bufferSize; ++i) fb.buffer[i] = 0;
 
         if (!debug) {
-            player.drawView(fb, &map[0]);
+            player.drawView(fb, map);
         } else {
-            player.drawDebug(fb, &map[0]);
+            player.drawDebug(fb, map);
         }
 
         fb.copyBuffer();
