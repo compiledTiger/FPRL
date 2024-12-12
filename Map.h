@@ -20,5 +20,8 @@ struct Map {
         for (int h = 0; h < length; ++h) {
             at(8, h) = wall;
         }
+        for (int h = 0; h < length; ++h) {
+            at(10, h) = wall;
+        }
     }
 };

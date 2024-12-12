@@ -9,7 +9,7 @@ struct WallTexture {
     WallTexture() : pixels() {}
     Color& at(int x, int y) { return pixels[y * width + x]; }
     void generate() {
-        for (auto& p : pixels) p = Color(160, 80, 40);
+        for (auto& p : pixels) p = Color(100, 100, 40);
 
         for (int h = 0; h < height; h += 4) {
             for (int w = 0; w < width; ++w) {

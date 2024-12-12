@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     FrameBuffer fb(w.sdlRenderer);
     std::set<SDL_Keycode> pressedKeys;
 
-    Being player(Vec2D(10, 5));
+    Being player(Vec2D(9.5, 5));
 
     Map<16> map;
     map.generate();
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
             player.rotate(rotationSpeed);
         if (releasedKeys.find(SDLK_d) != releasedKeys.end()) debug = !debug;
 
-        player.update();
+        player.update(map);
 
         // Clear buffer
         for (int i = 0; i < fb.bufferSize; ++i) fb.buffer[i] = 0;

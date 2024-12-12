@@ -15,4 +15,9 @@ struct Color {
         return Color(std::min(r + rhs.r, 255), std::min(g + rhs.g, 255),
                      std::min(b + rhs.b, 255), std::min(a + rhs.a, 255));
     }
+
+    Color operator*(double f) {
+        // Note that we do not change a
+        return Color(r * f, g * f, b * f, a);
+    }
 };

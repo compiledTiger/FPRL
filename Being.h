@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <optional>
 
 #include "Color.h"
@@ -15,11 +16,17 @@ struct Being {
     Vec2D view = Vec2D(0, -1);
     Vec2D cam = Vec2D(1, 0);
 
+    unsigned char flicker = 0;
+
     Being() = default;
     Being(const Vec2D& pos_) : pos(pos_) {}
 
-    void update() {
+    void update(Map<16>& map) {
         vel *= 0.7;
+        auto col = pos + (vel * 5.0);
+        if (map.at(int(col.x), int(col.y))) {
+            vel *= 0.0;
+        }
         pos += vel;
     }
 
@@ -32,25 +39,36 @@ struct Being {
 
     void drawView(FrameBuffer& fb, Map<16>& map) {
         int columns = fb.width;
+        flicker += rand() % 50 - 20;
         for (double screenX = 0; screenX < columns; ++screenX) {
             double fov = 0.7;
             Vec2D ray = view + (cam * (screenX / columns * 2.0 - 1.0) * fov);
             auto hit = dda(fb, map, ray);
             if (hit) {
                 int wallHeight = 255 / (hit->dist + 0.001);
-                if (wallHeight > 1000) wallHeight = 1000;
 
+                int wallTop = (fb.height - wallHeight) / 2;
+                int screenY = std::max(wallTop, 0);
+
+                int texelX = hit->wallPos * hit->wallTexture->width;
                 double texelY = 0;
-                // TODO clip
-                for (int screenY = (fb.height - wallHeight) / 2;
-                     screenY < (fb.height + wallHeight) / 2; ++screenY) {
-                    int texelX = hit->wallPos * hit->wallTexture->width;
-                    fb.drawPixel(
-                        screenX, screenY,
-                        hit->wallTexture->at(texelX, (int)texelY) +
-                            Color(100 / (0.5 * hit->dist * hit->dist + 1), 0,
-                                  0));
-                    texelY += ((double)hit->wallTexture->height) / wallHeight;
+                double dTexelY =
+                    ((double)hit->wallTexture->height) / wallHeight;
+                texelY += dTexelY * -std::min(wallTop, 0);
+
+                double lightFactor = 1.0 / (0.5 * hit->dist * hit->dist + 1);
+                double torchFactor =
+                    1.0 / (hit->dist * hit->dist * hit->dist + 1);
+
+                for (int i = 0; i < wallHeight; ++i) {
+                    if (screenY >= fb.height) break;
+                    auto color = hit->wallTexture->at(texelX, (int)texelY) *
+                                     lightFactor +
+                                 Color(flicker / 3, 0, 0) * torchFactor;
+                    fb.drawPixel(screenX, screenY, color);
+
+                    ++screenY;
+                    texelY += dTexelY;
                 }
             }
         }
