@@ -17,6 +17,11 @@ struct Color {
     }
 
     Color operator*(double f) {
+        if (f < 0.0) f *= -1.0;
+        // Prevents overflow
+        int red = std::min(r * f, 255.0);
+        int green = std::min(g * f, 255.0);
+        int blue = std::min(b * f, 255.0);
         // Note that we do not change a
         return Color(r * f, g * f, b * f, a);
     }

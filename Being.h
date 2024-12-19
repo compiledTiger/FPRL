@@ -56,15 +56,16 @@ struct Being {
                     ((double)hit->wallTexture->height) / wallHeight;
                 texelY += dTexelY * -std::min(wallTop, 0);
 
-                double lightFactor = 1.0 / (0.5 * hit->dist * hit->dist + 1);
+                double lightFactor = 1.0 / (0.3 * hit->dist * hit->dist + 1);
                 double torchFactor =
                     1.0 / (hit->dist * hit->dist * hit->dist + 1);
 
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
-                    auto color = hit->wallTexture->at(texelX, (int)texelY) *
-                                     lightFactor +
-                                 Color(flicker / 3, 0, 0) * torchFactor;
+                    auto color =
+                        hit->wallTexture->at(texelX, (int)texelY) *
+                            std::min((lightFactor + torchFactor), 1.0) +
+                        Color(flicker / 4, 0, 0) * torchFactor;
                     fb.drawPixel(screenX, screenY, color);
 
                     ++screenY;

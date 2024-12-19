@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     std::set<SDL_Keycode> pressedKeys;
 
     Being player(Vec2D(9.5, 5));
+    player.rotate(PI);
 
     Map<16> map;
     map.generate();
@@ -34,8 +35,9 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        double speed = 0.02;
+        double speed = 0.01;
         double rotationSpeed = PI / 80;
+        if (pressedKeys.find(SDLK_LSHIFT) != pressedKeys.end()) speed = 0.02;
         if (pressedKeys.find(SDLK_h) != pressedKeys.end())
             player.vel -= rotationM(PI / 2) * player.dir * speed;
         if (pressedKeys.find(SDLK_j) != pressedKeys.end())
