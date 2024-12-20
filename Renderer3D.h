@@ -17,8 +17,31 @@ struct Renderer3D {
     unsigned char flicker = 0;
 
     void drawView(const Being& player, Map<16>& map, FrameBuffer& fb) {
-        int columns = fb.width;
+        auto lightFactor = [](double dist) {
+            return 1.0 / (0.3 * dist * dist + 1);
+        };
+        auto torchFactor = [](double dist) {
+            return 1.0 / (dist * dist * dist + 1);
+        };
         flicker += rand() % 50 - 20;
+        Color torchColor(flicker / 4, 0, 0);
+
+        // Clear buffer and draw ceiling and floor
+        for (int y = 0; y < fb.height / 2; ++y) {
+            for (int x = 0; x < fb.width; ++x)
+                fb.drawPixel(x, y, Color(14, 28, 46));
+        }
+        for (int y = fb.height / 2; y < fb.height; ++y) {
+            // TODO take x into account, and make it fast
+            auto d = (double(fb.height - y) / double(fb.height / 2)) * 3.0;
+            auto lf = lightFactor(d);
+            auto tf = torchFactor(d);
+            auto c =
+                Color(36, 28, 14) * std::min(lf + tf, 1.0) + torchColor * tf;
+            for (int x = 0; x < fb.width; ++x) fb.drawPixel(x, y, c);
+        }
+
+        int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
             double fov = 0.7;
             Vec2D ray = player.view +
@@ -36,16 +59,13 @@ struct Renderer3D {
                     ((double)hit->wallTexture->height) / wallHeight;
                 texelY += dTexelY * -std::min(wallTop, 0);
 
-                double lightFactor = 1.0 / (0.3 * hit->dist * hit->dist + 1);
-                double torchFactor =
-                    1.0 / (hit->dist * hit->dist * hit->dist + 1);
-
+                auto tf = torchFactor(hit->dist);
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
                     auto color =
                         hit->wallTexture->at(texelX, (int)texelY) *
-                            std::min((lightFactor + torchFactor), 1.0) +
-                        Color(flicker / 4, 0, 0) * torchFactor;
+                            std::min((lightFactor(hit->dist) + tf), 1.0) +
+                        torchColor * tf;
                     fb.drawPixel(screenX, screenY, color);
 
                     ++screenY;

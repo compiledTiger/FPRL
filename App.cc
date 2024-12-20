@@ -59,9 +59,6 @@ int main(int argc, char* argv[]) {
 
         player.update(map);
 
-        // Clear buffer
-        for (int i = 0; i < fb.bufferSize; ++i) fb.buffer[i] = 0;
-
         if (!debug) {
             renderer.drawView(player, map, fb);
         } else {
