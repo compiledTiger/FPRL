@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
 
     bool debug = false;
     bool quit = false;
+    int frames = 0;
+    auto lastMillis = SDL_GetTicks();
     while (!quit) {
         SDL_Event e;
         std::set<SDL_Keycode> releasedKeys;
@@ -71,6 +73,16 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(w.sdlRenderer);
         w.renderFrameBuffer(fb, 240, 60);
         SDL_RenderPresent(w.sdlRenderer);
+
+        ++frames;
+        int fpsPollInterval = 60;
+        if (frames % fpsPollInterval == 0) {
+            std::cout << "FPS: "
+                      << int(double(fpsPollInterval) /
+                             double(SDL_GetTicks() - lastMillis) * 1000.0)
+                      << std::endl;
+            lastMillis = SDL_GetTicks();
+        }
     }
 
     return 0;
