@@ -3,11 +3,14 @@
 #include "Being.h"
 #include "Constants.h"
 #include "Map.h"
+#include "Renderer3D.h"
 #include "Window.h"
 
 int main(int argc, char* argv[]) {
     Window w;
     FrameBuffer fb(w.sdlRenderer);
+    Renderer3D renderer;
+
     std::set<SDL_Keycode> pressedKeys;
 
     Being player(Vec2D(9.5, 5));
@@ -58,15 +61,15 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < fb.bufferSize; ++i) fb.buffer[i] = 0;
 
         if (!debug) {
-            player.drawView(fb, map);
+            renderer.drawView(player, map, fb);
         } else {
-            player.drawDebug(fb, map);
+            renderer.drawDebug(player, map, fb);
         }
 
         fb.copyBuffer();
         SDL_SetRenderDrawColor(w.sdlRenderer, 0x20, 0xAA, 0x20, 0xFF);
         SDL_RenderClear(w.sdlRenderer);
-        w.renderFrameBuffer(fb, 80, 60);
+        w.renderFrameBuffer(fb, 240, 60);
         SDL_RenderPresent(w.sdlRenderer);
     }
 

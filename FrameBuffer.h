@@ -8,7 +8,7 @@
 
 class FrameBuffer {
    public:
-    FrameBuffer(SDL_Renderer* renderer, int width_ = 640, int height_ = 480)
+    FrameBuffer(SDL_Renderer* renderer, int width_ = 800, int height_ = 600)
         : width(width_),
           height(height_),
           pitch(width * bytesPerPixel),

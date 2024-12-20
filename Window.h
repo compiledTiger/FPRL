@@ -7,8 +7,8 @@
 #include "FrameBuffer.h"
 
 struct Window {
-    int WINDOW_WIDTH = 800;
-    int WINDOW_HEIGHT = 600;
+    int WINDOW_WIDTH = 1280;
+    int WINDOW_HEIGHT = 720;
 
     SDL_Window* sdlWindow = nullptr;
     SDL_Renderer* sdlRenderer = nullptr;

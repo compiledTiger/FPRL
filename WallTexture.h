@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Color.h"
+
 template <int width_, int height_>
 struct WallTexture {
     static const int width = width_;
