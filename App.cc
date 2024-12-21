@@ -9,7 +9,6 @@
 int main(int argc, char* argv[]) {
     Window w;
     FrameBuffer fb(w.sdlRenderer);
-    Renderer3D renderer;
 
     std::set<SDL_Keycode> pressedKeys;
 
@@ -18,6 +17,8 @@ int main(int argc, char* argv[]) {
 
     Map<16> map;
     map.generate();
+
+    Renderer3D renderer (fb, map);
 
     bool debug = false;
     bool quit = false;
@@ -60,9 +61,9 @@ int main(int argc, char* argv[]) {
         player.update(map);
 
         if (!debug) {
-            renderer.drawView(player, map, fb);
+            renderer.drawView(player);
         } else {
-            renderer.drawDebug(player, map, fb);
+            renderer.drawDebug(player);
         }
 
         fb.copyBuffer();

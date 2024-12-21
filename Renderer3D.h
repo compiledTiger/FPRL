@@ -14,41 +14,83 @@ struct Renderer3D {
         double wallPos;
     };
 
-    unsigned char flicker = 0;
+    FrameBuffer& fb;
+    Map<16>& map;
 
-    void drawView(const Being& player, Map<16>& map, FrameBuffer& fb) {
-        auto lightFactor = [](double dist) {
-            return 1.0 / (0.3 * dist * dist + 1);
-        };
-        auto torchFactor = [](double dist) {
-            return 1.0 / (dist * dist * dist + 1);
-        };
-        flicker += rand() % 50 - 20;
-        Color torchColor(flicker / 4, 0, 0);
+    double* floorDist;
+    double* floorLightMap;
+    double* floorCubedMap;
+    Color* floorColor;
 
-        // Clear buffer and draw ceiling and floor
+    Renderer3D(FrameBuffer& fb_, Map<16>& map_) : fb(fb_), map(map_) {
+        calcFloor();
+    }
+
+    // TODO break out 0.3
+    double lightFactor(double dist) { return 1.0 / (0.3 * dist * dist + 1); };
+    double cubedFactor(double dist) {
+        return 1.0 / (4 * dist * dist * dist + 1);
+    };
+
+    void calcFloor() {
+        floorDist = new double[fb.area / 2];
+        floorLightMap = new double[fb.area / 2];
+        floorCubedMap = new double[fb.area / 2];
+        floorColor = new Color[fb.area / 2];
         for (int y = 0; y < fb.height / 2; ++y) {
-            for (int x = 0; x < fb.width; ++x)
-                fb.drawPixel(x, y, Color(14, 28, 46));
+            double dY = invCalcHeight((y + 1) * 2);
+            for (int x = 0; x < fb.width; ++x) {
+                // TODO dX should depend on FOV
+                double dX = double(std::abs(x - fb.width / 2)) /
+                            double((fb.width / 2)) * dY;
+                double d = std::sqrt(dX * dX + dY * dY);
+                int index = y * fb.width + x;
+                floorDist[index] = d;
+                floorLightMap[index] = lightFactor(d);
+                floorCubedMap[index] = cubedFactor(d);
+                floorColor[index] = Color(40, 40, 20) * floorLightMap[index];
+            }
         }
-        for (int y = fb.height / 2; y < fb.height; ++y) {
-            // TODO take x into account, and make it fast
-            auto d = (double(fb.height - y) / double(fb.height / 2)) * 3.0;
-            auto lf = lightFactor(d);
-            auto tf = torchFactor(d);
-            auto c =
-                Color(36, 28, 14) * std::min(lf + tf, 1.0) + torchColor * tf;
-            for (int x = 0; x < fb.width; ++x) fb.drawPixel(x, y, c);
-        }
+    }
 
+    double epsilon = 0.001;
+    double calcHeight(double dist) const { return 255.0 / (dist + epsilon); }
+    double invCalcHeight(double height) const {
+        return 1.0 / height * 255.0 - epsilon;
+    }
+
+    unsigned char flicker = 0;
+    Color torchColor;
+
+    void drawView(const Being& player) {
+        flicker += rand() % 50 - 20;
+        torchColor = Color(flicker / 4, flicker / 8, flicker / 12);
+
+        drawFloorAndCeiling();
+        drawWalls(player);
+    }
+
+    void drawFloorAndCeiling() {
+        for (int i = 0; i < fb.area / 8; ++i) {
+            fb.drawPixel(fb.area / 2 + i, floorColor[i]);
+            fb.drawPixel(fb.area / 2 - i, floorColor[i]);
+        }
+        for (int i = fb.area / 8; i < fb.area / 2; ++i) {
+            fb.drawPixel(fb.area / 2 + i,
+                         floorColor[i] + torchColor * floorCubedMap[i]);
+            fb.drawPixel(fb.area / 2 - i,
+                         floorColor[i] + torchColor * floorCubedMap[i]);
+        }
+    }
+
+    void drawWalls(const Being& player) {
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
-            double fov = 0.7;
-            Vec2D ray = player.view +
-                        (player.cam * (screenX / columns * 2.0 - 1.0) * fov);
-            auto hit = dda(player, map, ray);
+            Vec2D ray =
+                player.view + (player.cam * (screenX / columns * 2.0 - 1.0));
+            auto hit = dda(player, ray);
             if (hit) {
-                int wallHeight = 255 / (hit->dist + 0.001);
+                int wallHeight = calcHeight(hit->dist);
 
                 int wallTop = (fb.height - wallHeight) / 2;
                 int screenY = std::max(wallTop, 0);
@@ -59,13 +101,12 @@ struct Renderer3D {
                     ((double)hit->wallTexture->height) / wallHeight;
                 texelY += dTexelY * -std::min(wallTop, 0);
 
-                auto tf = torchFactor(hit->dist);
+                auto tf = cubedFactor(hit->dist);
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
-                    auto color =
-                        hit->wallTexture->at(texelX, (int)texelY) *
-                            std::min((lightFactor(hit->dist) + tf), 1.0) +
-                        torchColor * tf;
+                    auto color = hit->wallTexture->at(texelX, (int)texelY) *
+                                     lightFactor(hit->dist) +
+                                 torchColor * tf;
                     fb.drawPixel(screenX, screenY, color);
 
                     ++screenY;
@@ -75,8 +116,8 @@ struct Renderer3D {
         }
     }
 
-    std::optional<ddaHit> dda(const Being& player, Map<16>& map, Vec2D ray,
-                              FrameBuffer* debug = nullptr) {
+    std::optional<ddaHit> dda(const Being& player, Vec2D ray,
+                              bool debug = false) {
         Vec2D rayPos = player.pos;
 
         int index = (int)rayPos.y * 16 + (int)rayPos.x;
@@ -117,20 +158,20 @@ struct Renderer3D {
             if (index > 255) index = -1;
             if (index < 0) index = -1;
             if (debug)
-                debug->drawRect(rayPos.x * 30, rayPos.y * 30, 5, 5,
-                                Color(100, 30, 200));
+                fb.drawRect(rayPos.x * 30, rayPos.y * 30, 5, 5,
+                            Color(100, 30, 200));
         }
-        if (index != -1 && map[index])
-            return ddaHit{(rayPos - player.pos).dot(player.view.norm()), index,
-                          map[index], wallPos};
-        else
+        if (index != -1 && map[index]) {
+            double dist = (rayPos - player.pos).dot(player.view.norm());
+            return ddaHit{dist, index, map[index], wallPos};
+        } else
             return std::nullopt;
     }
 
-    void drawDebug(const Being& player, Map<16>& map, FrameBuffer& fb) {
+    void drawDebug(const Being& player) {
         // Draw map
         for (int i = 0; i < 16 * 16; ++i) {
-            fb.drawRect((i % 16) * 30, (i / 16) * 30, 29, 29,
+            fb.drawRect((i % 16) * 30, (i / 16) * 30, 30, 30,
                         Color(80 * (bool)map[i], 70 * (bool)map[i], 70));
         }
 
@@ -141,17 +182,11 @@ struct Renderer3D {
 
         drawW(player.pos);
 
-        auto p = player.pos + player.view;
-        p -= player.cam;
-        drawW(p);
-        p += player.cam * 2;
-        drawW(p);
-
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
             Vec2D ray =
                 player.view + (player.cam * (screenX / columns * 2.0 - 1.0));
-            dda(player, map, ray, &fb);
+            dda(player, ray, true);
         }
     }
 };

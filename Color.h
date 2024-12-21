@@ -12,17 +12,11 @@ struct Color {
     Color() = default;
 
     Color operator+(const Color& rhs) {
-        return Color(std::min(r + rhs.r, 255), std::min(g + rhs.g, 255),
-                     std::min(b + rhs.b, 255), std::min(a + rhs.a, 255));
+        return Color(r + rhs.r, g + rhs.g, b + rhs.b, a + rhs.a);
     }
 
     Color operator*(double f) {
-        if (f < 0.0) f *= -1.0;
-        // Prevents overflow
-        int red = std::min(r * f, 255.0);
-        int green = std::min(g * f, 255.0);
-        int blue = std::min(b * f, 255.0);
         // Note that we do not change a
-        return Color(r * f, g * f, b * f, a);
+        return Color(double(r) * f, double(g) * f, double(b) * f, a);
     }
 };

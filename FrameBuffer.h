@@ -12,6 +12,7 @@ class FrameBuffer {
         : width(width_),
           height(height_),
           pitch(width * bytesPerPixel),
+          area(width * height),
           bufferSize(height * pitch) {
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
                                     SDL_TEXTUREACCESS_STREAMING, width, height);
@@ -19,17 +20,24 @@ class FrameBuffer {
         // first alpha, then B G R
         buffer = new unsigned char[bufferSize];
     }
+    unsigned char* at(int i) { return buffer + i * bytesPerPixel; }
+
     unsigned char* at(int x, int y) {
         return buffer + x * bytesPerPixel + y * pitch;
     }
+
     const unsigned char* at(int x, int y) const { return at(x, y); }
+
     SDL_Texture* getTexture() { return texture; }
+
     void copyBuffer() {
         lock();
         memcpy(texturePixels, buffer, texturePitch * height);
         unlock();
     }
+
     bool isLocked() { return locked; }
+
     bool lock() {
         if (isLocked()) {
             std::cout << "Failed to lock already locked texture" << std::endl;
@@ -45,6 +53,7 @@ class FrameBuffer {
         locked = true;
         return true;
     }
+
     bool unlock() {
         if (!isLocked()) {
             std::cout << "Failed to unlock not locked texture" << std::endl;
@@ -61,7 +70,15 @@ class FrameBuffer {
         if (x >= 0 && x < width && y >= 0 && y < height)
             drawPixel(at(x, y), c);
         else {
-            // std::cout << "Warning: out of bounds drawPixel" << std::endl;
+            std::cout << "Warning: out of bounds drawPixel(x, y)" << std::endl;
+        }
+    }
+
+    void drawPixel(int i, Color c) {
+        if (i >= 0 && i < area)
+            drawPixel(at(i), c);
+        else {
+            std::cout << "Warning: out of bounds drawPixel(i)" << std::endl;
         }
     }
 
@@ -88,6 +105,7 @@ class FrameBuffer {
     const int width;
     const int height;
     const int pitch;
+    const int area;
     const int bufferSize;
     unsigned char* buffer;
 
