@@ -12,15 +12,8 @@ class FrameBuffer {
         : width(width_), height(height_), area(width * height) {
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
                                     SDL_TEXTUREACCESS_STREAMING, width, height);
-        // RGBA8888 = 4 bytes = 4 chars
-        // first alpha, then B G R
         buffer = new Color[area];
     }
-    Color* at(int i) { return buffer + i; }
-
-    Color* at(int x, int y) { return buffer + x + y * width; }
-
-    const Color* at(int x, int y) const { return at(x, y); }
 
     SDL_Texture* getTexture() { return texture; }
 
@@ -61,20 +54,10 @@ class FrameBuffer {
     }
 
     void drawPixel(int x, int y, Color c) {
-        if (x >= 0 && x < width && y >= 0 && y < height)
-            drawPixel(at(x, y), c);
-        else {
-            std::cout << "Warning: out of bounds drawPixel(x, y)" << std::endl;
-        }
+        drawPixel((buffer + x + y * width), c);
     }
 
-    void drawPixel(int i, Color c) {
-        if (i >= 0 && i < area)
-            drawPixel(at(i), c);
-        else {
-            std::cout << "Warning: out of bounds drawPixel(i)" << std::endl;
-        }
-    }
+    void drawPixel(int i, Color c) { drawPixel((buffer + i), c); }
 
     void drawPixel(Color* p, Color c) { *p = c; }
 
