@@ -110,10 +110,11 @@ struct Renderer3D {
                 texelY += dTexelY * -std::min(wallTop, 0);
 
                 auto tf = cubedFactor(hit->dist);
+                auto lf = lightFactor(hit->dist);
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
-                    Color color = hit->wallTexture->at(texelX, (int)texelY) *
-                                  lightFactor(hit->dist);
+                    Color color =
+                        hit->wallTexture->at(texelX, (int)texelY) * lf;
                     if (torch) color = color + torchColor * tf;
 
                     fb.drawPixel(screenX, screenY, color);
