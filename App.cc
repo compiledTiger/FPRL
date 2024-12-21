@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     Map<16> map;
     map.generate();
 
-    Renderer3D renderer (fb, map);
+    Renderer3D renderer(fb, map);
 
     bool debug = false;
     bool quit = false;
@@ -57,6 +57,8 @@ int main(int argc, char* argv[]) {
         if (pressedKeys.find(SDLK_e) != pressedKeys.end())
             player.rotate(rotationSpeed);
         if (releasedKeys.find(SDLK_d) != releasedKeys.end()) debug = !debug;
+        if (releasedKeys.find(SDLK_t) != releasedKeys.end())
+            renderer.torch = !renderer.torch;
 
         player.update(map);
 
