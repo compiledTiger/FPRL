@@ -9,24 +9,18 @@
 class FrameBuffer {
    public:
     FrameBuffer(SDL_Renderer* renderer, int width_ = 800, int height_ = 600)
-        : width(width_),
-          height(height_),
-          pitch(width * bytesPerPixel),
-          area(width * height),
-          bufferSize(height * pitch) {
+        : width(width_), height(height_), area(width * height) {
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
                                     SDL_TEXTUREACCESS_STREAMING, width, height);
         // RGBA8888 = 4 bytes = 4 chars
         // first alpha, then B G R
-        buffer = new unsigned char[bufferSize];
+        buffer = new Color[area];
     }
-    unsigned char* at(int i) { return buffer + i * bytesPerPixel; }
+    Color* at(int i) { return buffer + i; }
 
-    unsigned char* at(int x, int y) {
-        return buffer + x * bytesPerPixel + y * pitch;
-    }
+    Color* at(int x, int y) { return buffer + x + y * width; }
 
-    const unsigned char* at(int x, int y) const { return at(x, y); }
+    const Color* at(int x, int y) const { return at(x, y); }
 
     SDL_Texture* getTexture() { return texture; }
 
@@ -82,12 +76,7 @@ class FrameBuffer {
         }
     }
 
-    void drawPixel(unsigned char* byte, Color c) {
-        *byte++ = c.a;
-        *byte++ = c.b;
-        *byte++ = c.g;
-        *byte++ = c.r;
-    }
+    void drawPixel(Color* p, Color c) { *p = c; }
 
     void drawRect(int x, int y, int w, int h, Color c, bool centered = false) {
         if (centered) {
@@ -101,13 +90,10 @@ class FrameBuffer {
         }
     }
 
-    const int bytesPerPixel = 4;
     const int width;
     const int height;
-    const int pitch;
     const int area;
-    const int bufferSize;
-    unsigned char* buffer;
+    Color* buffer;
 
    private:
     // Hardware texture
