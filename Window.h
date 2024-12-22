@@ -34,7 +34,7 @@ struct Window {
         // TODO -1?
         sdlRenderer = SDL_CreateRenderer(
             sdlWindow, -1,
-            SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+            SDL_RENDERER_ACCELERATED);
 
         if (!sdlRenderer) {
             std::cout << "Failed to create SDL renderer: " << SDL_GetError()
