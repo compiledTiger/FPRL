@@ -8,7 +8,7 @@
 
 class FrameBuffer {
    public:
-    FrameBuffer(SDL_Renderer* renderer, int width_ = 800, int height_ = 600)
+    FrameBuffer(SDL_Renderer* renderer, int width_ = 400, int height_ = 300)
         : width(width_), height(height_), area(width * height) {
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
                                     SDL_TEXTUREACCESS_STREAMING, width, height);

@@ -12,7 +12,7 @@ struct Being {
     Vec2D dir = Vec2D(0, -1);
     Vec2D vel = Vec2D(0, 0);
     Vec2D view = Vec2D(0, -1);
-    Vec2D cam = Vec2D(0.75, 0);
+    Vec2D cam = Vec2D(1, 0);
 
     Being() = default;
     Being(const Vec2D& pos_) : pos(pos_) {}

@@ -9,45 +9,17 @@
 struct Renderer3D {
     struct ddaHit {
         double dist;
-        int mapIndex;                      // TODO remove
-        WallTexture<32, 32>* wallTexture;  // TODO guaranteed non-null?
+        int mapIndex;                  // TODO remove
+        Texture<32, 32>* wallTexture;  // TODO guaranteed non-null?
         double wallPos;
     };
 
     FrameBuffer& fb;
     Map<16>& map;
 
-    double* floorDist;
-    double* floorLightMap;
-    double* floorCubedMap;
-    Color* floorColor;
+    Renderer3D(FrameBuffer& fb_, Map<16>& map_) : fb(fb_), map(map_) {}
 
-    Renderer3D(FrameBuffer& fb_, Map<16>& map_) : fb(fb_), map(map_) {
-        calcFloor();
-    }
-
-    // TODO break out 0.3
-    double lightFactor(double dist) { return 1.0 / (0.3 * dist * dist + 1); };
-
-    void calcFloor() {
-        floorDist = new double[fb.area / 2];
-        floorLightMap = new double[fb.area / 2];
-        floorCubedMap = new double[fb.area / 2];
-        floorColor = new Color[fb.area / 2];
-        for (int y = 0; y < fb.height / 2; ++y) {
-            double dY = invCalcHeight((y + 1) * 2);
-            for (int x = 0; x < fb.width; ++x) {
-                // TODO dX should depend on FOV
-                double dX = double(std::abs(x - fb.width / 2)) /
-                            double((fb.width / 2)) * dY;
-                double d = std::sqrt(dX * dX + dY * dY);
-                int index = y * fb.width + x;
-                floorDist[index] = d;
-                floorLightMap[index] = lightFactor(d);
-                floorColor[index] = Color(40, 40, 20) * floorLightMap[index];
-            }
-        }
-    }
+    double lightFactor(double dist) { return 1.0 / (1.5 * dist + 1.0); };
 
     double epsilon = 0.001;
     double calcHeight(double dist) const { return 255.0 / (dist + epsilon); }
@@ -55,27 +27,43 @@ struct Renderer3D {
         return 1.0 / height * 255.0 - epsilon;
     }
 
+    double fov = 0.75;
+
     void drawView(const Being& player) {
-        drawFloorAndCeiling();
+        drawFloorAndCeiling(player);
         drawWalls(player);
     }
 
-    void drawFloorAndCeiling() {
-        for (int i = 0; i < fb.area / 8; ++i) {
-            fb.drawPixel(fb.area / 2 + i, floorColor[i]);
-            fb.drawPixel(fb.area / 2 - i, floorColor[i]);
-        }
-        for (int i = fb.area / 8; i < fb.area / 2; ++i) {
-            fb.drawPixel(fb.area / 2 + i, floorColor[i]);
-            fb.drawPixel(fb.area / 2 - i, floorColor[i]);
+    void drawFloorAndCeiling(const Being& player) {
+        for (int y = 0; y < fb.height / 2; ++y) {
+            double dY = invCalcHeight((y + 1) * 2);
+            for (int x = 0; x < fb.width; ++x) {
+                double dX = double(x - fb.width / 2) / double((fb.width / 2)) *
+                            fov * dY;
+                Vec2D floorPos =
+                    player.view * dY + player.cam * dX + player.pos;
+                // TODO remove hardcoding
+                int qX = (int)floorPos.x;
+                int qY = (int)floorPos.y;
+                double rX = floorPos.x - qX;
+                double rY = floorPos.y - qY;
+                double dist = std::sqrt(dX * dX + dY * dY);
+                auto lf = lightFactor(dist);
+                if (qX > 0 && qX < 16 && qY > 0 && qY < 16) {
+                    Texture<32, 32>* floorTexture = map.floor[qX + 16 * qY];
+                    Color c = floorTexture->at(rX * 32, rY * 32) * lf;
+                    fb.drawPixel(fb.area / 2 + (x + fb.width * y), c);
+                    fb.drawPixel(fb.area / 2 - (-x + fb.width * y), c);
+                }
+            }
         }
     }
 
     void drawWalls(const Being& player) {
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
-            Vec2D ray =
-                player.view + (player.cam * (screenX / columns * 2.0 - 1.0));
+            Vec2D ray = player.view +
+                        (player.cam * fov * (screenX / columns * 2.0 - 1.0));
             auto hit = dda(player, ray);
             if (hit) {
                 int wallHeight = calcHeight(hit->dist);
@@ -116,7 +104,7 @@ struct Renderer3D {
         int rayTargetX = (int)rayPos.x + xDir;
         int rayTargetY = (int)rayPos.y + yDir;
         double wallPos = 0;
-        WallTexture<32, 32>* wallTexture;
+        Texture<32, 32>* wallTexture;
 
         while (index != -1 && map[index] == nullptr && ++iter < 20) {
             double wallDistX = rayTargetX - rayPos.x;
