@@ -57,8 +57,6 @@ int main(int argc, char* argv[]) {
         if (pressedKeys.find(SDLK_e) != pressedKeys.end())
             player.rotate(rotationSpeed);
         if (releasedKeys.find(SDLK_d) != releasedKeys.end()) debug = !debug;
-        if (releasedKeys.find(SDLK_t) != releasedKeys.end())
-            renderer.torch = !renderer.torch;
 
         player.update(map);
 

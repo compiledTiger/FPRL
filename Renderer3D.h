@@ -28,9 +28,6 @@ struct Renderer3D {
 
     // TODO break out 0.3
     double lightFactor(double dist) { return 1.0 / (0.3 * dist * dist + 1); };
-    double cubedFactor(double dist) {
-        return 1.0 / (4 * dist * dist * dist + 1);
-    };
 
     void calcFloor() {
         floorDist = new double[fb.area / 2];
@@ -47,7 +44,6 @@ struct Renderer3D {
                 int index = y * fb.width + x;
                 floorDist[index] = d;
                 floorLightMap[index] = lightFactor(d);
-                floorCubedMap[index] = cubedFactor(d);
                 floorColor[index] = Color(40, 40, 20) * floorLightMap[index];
             }
         }
@@ -59,14 +55,7 @@ struct Renderer3D {
         return 1.0 / height * 255.0 - epsilon;
     }
 
-    unsigned char flicker = 0;
-    Color torchColor;
-    bool torch = false;
-
     void drawView(const Being& player) {
-        flicker += rand() % 50 - 20;
-        torchColor = Color(flicker / 4, flicker / 8, flicker / 12);
-
         drawFloorAndCeiling();
         drawWalls(player);
     }
@@ -76,18 +65,9 @@ struct Renderer3D {
             fb.drawPixel(fb.area / 2 + i, floorColor[i]);
             fb.drawPixel(fb.area / 2 - i, floorColor[i]);
         }
-        if (torch) {
-            for (int i = fb.area / 8; i < fb.area / 2; ++i) {
-                fb.drawPixel(fb.area / 2 + i,
-                             floorColor[i] + torchColor * floorCubedMap[i]);
-                fb.drawPixel(fb.area / 2 - i,
-                             floorColor[i] + torchColor * floorCubedMap[i]);
-            }
-        } else {
-            for (int i = fb.area / 8; i < fb.area / 2; ++i) {
-                fb.drawPixel(fb.area / 2 + i, floorColor[i]);
-                fb.drawPixel(fb.area / 2 - i, floorColor[i]);
-            }
+        for (int i = fb.area / 8; i < fb.area / 2; ++i) {
+            fb.drawPixel(fb.area / 2 + i, floorColor[i]);
+            fb.drawPixel(fb.area / 2 - i, floorColor[i]);
         }
     }
 
@@ -109,13 +89,11 @@ struct Renderer3D {
                     ((double)hit->wallTexture->height) / wallHeight;
                 texelY += dTexelY * -std::min(wallTop, 0);
 
-                auto tf = cubedFactor(hit->dist);
                 auto lf = lightFactor(hit->dist);
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
                     Color color =
                         hit->wallTexture->at(texelX, (int)texelY) * lf;
-                    if (torch) color = color + torchColor * tf;
 
                     fb.drawPixel(screenX, screenY, color);
 
