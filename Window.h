@@ -7,8 +7,8 @@
 #include "FrameBuffer.h"
 
 struct Window {
-    int WINDOW_WIDTH = 1280;
-    int WINDOW_HEIGHT = 720;
+    int WINDOW_WIDTH = 1500;
+    int WINDOW_HEIGHT = 900;
 
     SDL_Window* sdlWindow = nullptr;
     SDL_Renderer* sdlRenderer = nullptr;
@@ -32,9 +32,9 @@ struct Window {
         }
 
         // TODO -1?
-        sdlRenderer = SDL_CreateRenderer(
-            sdlWindow, -1,
-            SDL_RENDERER_ACCELERATED);
+        sdlRenderer =
+            SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
         if (!sdlRenderer) {
             std::cout << "Failed to create SDL renderer: " << SDL_GetError()
@@ -47,7 +47,7 @@ struct Window {
     }
 
     void renderFrameBuffer(FrameBuffer& fb, int x, int y) {
-        SDL_Rect destRect = {x, y, fb.width*2, fb.height*2};
+        SDL_Rect destRect = {x, y, fb.width * 4, fb.height * 4};
         // TODO nullptr?
         SDL_RenderCopy(sdlRenderer, fb.getTexture(), nullptr, &destRect);
     }

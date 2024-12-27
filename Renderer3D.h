@@ -21,10 +21,13 @@ struct Renderer3D {
 
     double lightFactor(double dist) { return 1.0 / (1.5 * dist + 1.0); };
 
-    double epsilon = 0.001;
-    double calcHeight(double dist) const { return 255.0 / (dist + epsilon); }
+    const double epsilon = 0.001;
+    const double baseHeight = double(fb.height);
+    double calcHeight(double dist) const {
+        return baseHeight / (dist + epsilon);
+    }
     double invCalcHeight(double height) const {
-        return 1.0 / height * 255.0 - epsilon;
+        return 1.0 / height * baseHeight - epsilon;
     }
 
     double fov = 0.75;
