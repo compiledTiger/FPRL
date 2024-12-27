@@ -66,18 +66,18 @@ struct Renderer3D {
                         (player.cam * fov * (screenX / columns * 2.0 - 1.0));
             auto hit = dda(player, ray);
             if (hit) {
-                int wallHeight = calcHeight(hit->dist);
+                double wallHeight = calcHeight(hit->dist);
 
-                int wallTop = (fb.height - wallHeight) / 2;
-                int screenY = std::max(wallTop, 0);
+                double wallTop = (double(fb.height) - wallHeight) / 2.0;
+                int screenY = std::max(wallTop, 0.0);
 
                 int texelX = hit->wallPos * hit->wallTexture->width;
                 double texelY = 0;
                 double dTexelY =
-                    ((double)hit->wallTexture->height) / double(wallHeight);
-                texelY += dTexelY * -std::min(double(wallTop), 0.0);
+                    ((double)hit->wallTexture->height) / wallHeight;
+                texelY += dTexelY * -std::min(wallTop, 0.0);
 
-                auto lf = lightFactor(hit->dist);
+                double lf = lightFactor(hit->dist);
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
                     Color color =
