@@ -53,7 +53,7 @@ struct Renderer3D {
                     Texture<32, 32>* floorTexture = map.floor[qX + 16 * qY];
                     Color c = floorTexture->at(rX * 32, rY * 32) * lf;
                     fb.drawPixel(fb.area / 2 + (x + fb.width * y), c);
-                    fb.drawPixel(fb.area / 2 - (-x + fb.width * y), c);
+                    fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), c);
                 }
             }
         }
@@ -74,14 +74,14 @@ struct Renderer3D {
                 int texelX = hit->wallPos * hit->wallTexture->width;
                 double texelY = 0;
                 double dTexelY =
-                    ((double)hit->wallTexture->height) / wallHeight;
-                texelY += dTexelY * -std::min(wallTop, 0);
+                    ((double)hit->wallTexture->height) / double(wallHeight);
+                texelY += dTexelY * -std::min(double(wallTop), 0.0);
 
                 auto lf = lightFactor(hit->dist);
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
                     Color color =
-                        hit->wallTexture->at(texelX, (int)texelY) * lf;
+                        hit->wallTexture->at(texelX, std::round(texelY)) * lf;
 
                     fb.drawPixel(screenX, screenY, color);
 
