@@ -137,8 +137,8 @@ struct Renderer3D {
             if (index > 255) index = -1;
             if (index < 0) index = -1;
             if (debug)
-                fb.drawRect(rayPos.x * 30, rayPos.y * 30, 5, 5,
-                            Color(100, 30, 200));
+                fb.drawRect(rayPos.x * mapSquareSize, rayPos.y * mapSquareSize,
+                            5, 5, Color(100, 30, 200));
         }
         if (index != -1 && map[index]) {
             double dist = (rayPos - player.pos).dot(player.view.norm());
@@ -147,16 +147,18 @@ struct Renderer3D {
             return std::nullopt;
     }
 
+    int mapSquareSize = fb.height / 16;
     void drawDebug(const Being& player) {
         // Draw map
         for (int i = 0; i < 16 * 16; ++i) {
-            fb.drawRect((i % 16) * 30, (i / 16) * 30, 30, 30,
+            fb.drawRect((i % 16) * mapSquareSize, (i / 16) * mapSquareSize,
+                        mapSquareSize, mapSquareSize,
                         Color(80 * (bool)map[i], 70 * (bool)map[i], 70));
         }
 
-        int scaling = 30;
         auto drawW = [&](Vec2D v) {
-            fb.drawRect(v.x * 30, v.y * 30, 5, 5, Color(255, 255, 255), true);
+            fb.drawRect(v.x * mapSquareSize, v.y * mapSquareSize, 5, 5,
+                        Color(255, 255, 255), true);
         };
 
         drawW(player.pos);
