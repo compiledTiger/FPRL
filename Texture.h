@@ -31,8 +31,8 @@ struct Texture {
             offset = !offset;
         }
     }
-    void generateFloor() {
-        for (auto& p : pixels) p = Color(100, 100, 40);
+    void generateFloor(Color c) {
+        for (auto& p : pixels) p = c;
 
         for (int h = 0; h < height; h += 8) {
             for (int w = 0; w < width; ++w) {

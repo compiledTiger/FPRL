@@ -7,8 +7,9 @@ struct Map {
     static const int length = length_;
     Texture<32, 32>* walls[length * length];
     Texture<32, 32>* floor[length * length];
+    Texture<32, 32>* ceiling[length * length];
     // walls() sets values to nullptr
-    Map() : walls(), floor() {}
+    Map() : walls(), floor(), ceiling() {}
     Texture<32, 32>*& operator[](int i) { return walls[i]; }
     Texture<32, 32>*& at(int x, int y) { return walls[y * length + x]; }
     void generate() {
@@ -42,10 +43,13 @@ struct Map {
 
         // TODO destroy
         auto* f = new Texture<32, 32>();
-        f->generateFloor();
+        f->generateFloor(Color(200, 200, 80));
+        auto* c = new Texture<32, 32>();
+        c->generateFloor(Color(80, 120, 30));
         for (int h = 0; h < length; ++h) {
             for (int w = 0; w < length; ++w) {
                 floor[h * length + w] = f;
+                ceiling[h * length + w] = c;
             }
         }
     }

@@ -54,9 +54,11 @@ struct Renderer3D {
                 auto lf = lightFactor(dist);
                 if (qX > 0 && qX < 16 && qY > 0 && qY < 16) {
                     Texture<32, 32>* floorTexture = map.floor[qX + 16 * qY];
-                    Color c = floorTexture->at(rX * 32, rY * 32) * lf;
-                    fb.drawPixel(fb.area / 2 + (x + fb.width * y), c);
-                    fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), c);
+                    Texture<32, 32>* ceilingTexture = map.ceiling[qX + 16 * qY];
+                    Color cF = floorTexture->at(rX * 32, rY * 32) * lf;
+                    Color cC = ceilingTexture->at(rX * 32, rY * 32) * lf;
+                    fb.drawPixel(fb.area / 2 + (x + fb.width * y), cF);
+                    fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), cC);
                 }
             }
         }

@@ -47,7 +47,8 @@ struct Window {
     }
 
     void renderFrameBuffer(FrameBuffer& fb, int x, int y) {
-        SDL_Rect destRect = {x, y, fb.width * 4, fb.height * 4};
+        int scaling = 2;
+        SDL_Rect destRect = {x, y, fb.width * scaling, fb.height * scaling};
         // TODO nullptr?
         SDL_RenderCopy(sdlRenderer, fb.getTexture(), nullptr, &destRect);
     }
