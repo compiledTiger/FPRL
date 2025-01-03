@@ -6,10 +6,29 @@ template <int width_, int height_>
 struct Texture {
     static const int width = width_;
     static const int height = height_;
-    Color pixels[width * height];
+    static const int area = width * height;
+    static const int darknessLevels = 64;
+    static const int nPixels = darknessLevels * area;
+    Color pixels[nPixels];
+
     // pixels() sets values to nullptr
     Texture() : pixels() {}
-    Color& at(int x, int y) { return pixels[y * width + x]; }
+
+    Color& at(int x, int y, int darknessLevel = 0) {
+        return pixels[darknessLevel * area + y * width + x];
+    }
+
+    void calcDarknessLevels() {
+        for (int darknessLevel = 1; darknessLevel < darknessLevels;
+             ++darknessLevel) {
+            for (int i = 0; i < area; ++i) {
+                pixels[darknessLevel * area + i] =
+                    pixels[i] * (double(darknessLevels - darknessLevel) /
+                                 double(darknessLevels));
+            }
+        }
+    }
+
     void generateWall() {
         for (auto& p : pixels) p = Color(100, 100, 40);
 
@@ -30,6 +49,7 @@ struct Texture {
             }
             offset = !offset;
         }
+        calcDarknessLevels();
     }
     void generateFloor(Color c) {
         for (auto& p : pixels) p = c;
@@ -51,5 +71,6 @@ struct Texture {
             }
             offset = !offset;
         }
+        calcDarknessLevels();
     }
 };

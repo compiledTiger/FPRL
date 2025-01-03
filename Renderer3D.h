@@ -19,7 +19,10 @@ struct Renderer3D {
 
     Renderer3D(FrameBuffer& fb_, Map<16>& map_) : fb(fb_), map(map_) {}
 
-    double lightFactor(double dist) { return 1.0 / (1.5 * dist + 1.0); };
+    int darknessLevel(double dist) {
+        const int levels = 64;
+        return levels - (levels / (0.9 * dist + 1.00001));
+    };
 
     const double epsilon = 0.001;
     const double baseHeight = double(fb.height);
@@ -51,12 +54,12 @@ struct Renderer3D {
                 double rX = floorPos.x - qX;
                 double rY = floorPos.y - qY;
                 double dist = std::sqrt(dX * dX + dY * dY);
-                auto lf = lightFactor(dist);
+                auto dl = darknessLevel(dist);
                 if (qX > 0 && qX < 16 && qY > 0 && qY < 16) {
                     Texture<32, 32>* floorTexture = map.floor[qX + 16 * qY];
                     Texture<32, 32>* ceilingTexture = map.ceiling[qX + 16 * qY];
-                    Color cF = floorTexture->at(rX * 32, rY * 32) * lf;
-                    Color cC = ceilingTexture->at(rX * 32, rY * 32) * lf;
+                    Color cF = floorTexture->at(rX * 32, rY * 32, dl);
+                    Color cC = ceilingTexture->at(rX * 32, rY * 32, dl);
                     fb.drawPixel(fb.area / 2 + (x + fb.width * y), cF);
                     fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), cC);
                 }
@@ -82,11 +85,10 @@ struct Renderer3D {
                     ((double)hit->wallTexture->height) / wallHeight;
                 texelY += dTexelY * -std::min(wallTop, 0.0);
 
-                double lf = lightFactor(hit->dist);
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
-                    Color color =
-                        hit->wallTexture->at(texelX, std::round(texelY)) * lf;
+                    Color color = hit->wallTexture->at(
+                        texelX, std::round(texelY), darknessLevel(hit->dist));
 
                     fb.drawPixel(screenX, screenY, color);
 
