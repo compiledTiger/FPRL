@@ -4,11 +4,11 @@
 #include "Constants.h"
 #include "Map.h"
 #include "Renderer3D.h"
-#include "Window.h"
+#include "SDLWindow.h"
 
 int main(int argc, char* argv[]) {
-    Window w;
-    FrameBuffer fb(w.sdlRenderer);
+    SDLWindow w(1500, 900, 480, 360);
+    FrameBuffer fb(w.RENDER_WIDTH, w.RENDER_HEIGHT);
 
     std::set<SDL_Keycode> pressedKeys;
 
@@ -91,11 +91,7 @@ int main(int argc, char* argv[]) {
                 renderer.drawDebug(player);
             }
 
-            fb.copyBuffer();
-            SDL_SetRenderDrawColor(w.sdlRenderer, 0x20, 0xAA, 0x20, 0xFF);
-            SDL_RenderClear(w.sdlRenderer);
-            w.renderFrameBuffer(fb, 240, 60);
-            SDL_RenderPresent(w.sdlRenderer);
+            w.drawFrameBuffer(fb, 240, 60);
 
             ++frames;
             if (frames % ticksPerSecond == 0) {
