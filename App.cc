@@ -1,5 +1,3 @@
-#include <set>
-
 #include "Being.h"
 #include "Constants.h"
 #include "Map.h"
@@ -9,8 +7,6 @@
 int main(int argc, char* argv[]) {
     SDLWindow w(1500, 900, 480, 360);
     FrameBuffer fb(w.RENDER_WIDTH, w.RENDER_HEIGHT);
-
-    std::set<SDL_Keycode> pressedKeys;
 
     Being player(Vec2D(9.5, 5));
     player.rotate(PI);
@@ -33,38 +29,28 @@ int main(int argc, char* argv[]) {
         if (double(SDL_GetTicks() - lastTickMillis) >=
             1000.0 / (ticksPerSecond + tickTimeCompensation)) {
             SDL_Event e;
-            std::set<SDL_Keycode> releasedKeys;
             while (SDL_PollEvent(&e)) {
-                if (e.type == SDL_QUIT)
+                if (e.type == SDL_QUIT) {
                     quit = true;
-                else if (e.type == SDL_KEYDOWN) {
-                    auto key = e.key.keysym.sym;
-                    pressedKeys.insert(key);
-                    if (key == SDLK_ESCAPE) quit = true;
-                } else if (e.type == SDL_KEYUP) {
-                    auto key = e.key.keysym.sym;
-                    pressedKeys.erase(key);
-                    releasedKeys.insert(key);
+                    break;
                 }
             }
 
             double speed = 0.01;
             double rotationSpeed = PI / 80;
-            if (pressedKeys.find(SDLK_LSHIFT) != pressedKeys.end())
-                speed = 0.02;
-            if (pressedKeys.find(SDLK_h) != pressedKeys.end())
+
+            const Uint8* keyboard = SDL_GetKeyboardState(nullptr);
+            if (keyboard[SDL_SCANCODE_LSHIFT]) speed = 0.02;
+            if (keyboard[SDL_SCANCODE_H])
                 player.vel -= rotationM(PI / 2) * player.dir * speed;
-            if (pressedKeys.find(SDLK_j) != pressedKeys.end())
-                player.vel -= player.dir * speed;
-            if (pressedKeys.find(SDLK_k) != pressedKeys.end())
-                player.vel += player.dir * speed;
-            if (pressedKeys.find(SDLK_l) != pressedKeys.end())
+            if (keyboard[SDL_SCANCODE_J]) player.vel -= player.dir * speed;
+            if (keyboard[SDL_SCANCODE_K]) player.vel += player.dir * speed;
+            if (keyboard[SDL_SCANCODE_L])
                 player.vel += rotationM(PI / 2) * player.dir * speed;
-            if (pressedKeys.find(SDLK_q) != pressedKeys.end())
-                player.rotate(-rotationSpeed);
-            if (pressedKeys.find(SDLK_e) != pressedKeys.end())
-                player.rotate(rotationSpeed);
-            if (releasedKeys.find(SDLK_d) != releasedKeys.end()) debug = !debug;
+            if (keyboard[SDL_SCANCODE_Q]) player.rotate(-rotationSpeed);
+            if (keyboard[SDL_SCANCODE_E]) player.rotate(rotationSpeed);
+            quit = quit || keyboard[SDL_SCANCODE_ESCAPE];
+            debug = keyboard[SDL_SCANCODE_D];
 
             player.update(map);
 
