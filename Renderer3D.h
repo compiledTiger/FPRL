@@ -47,7 +47,7 @@ struct Renderer3D {
                 double dX = double(x - fb.width / 2) / double((fb.width / 2)) *
                             fov * dY;
                 Vec2D floorPos =
-                    player.view * dY + player.cam * dX + player.pos;
+                    player.dir * dY + player.cam() * dX + player.pos;
                 // TODO remove hardcoding
                 int qX = (int)floorPos.x;
                 int qY = (int)floorPos.y;
@@ -70,8 +70,8 @@ struct Renderer3D {
     void drawWalls(const Being& player) {
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
-            Vec2D ray = player.view +
-                        (player.cam * fov * (screenX / columns * 2.0 - 1.0));
+            Vec2D ray = player.dir +
+                        (player.cam() * fov * (screenX / columns * 2.0 - 1.0));
             auto hit = dda(player, ray);
             if (hit) {
                 double wallHeight = calcHeight(hit->dist);
@@ -145,7 +145,7 @@ struct Renderer3D {
                             5, 5, Color(100, 30, 200));
         }
         if (index != -1 && map[index]) {
-            double dist = (rayPos - player.pos).dot(player.view.norm());
+            double dist = (rayPos - player.pos).dot(player.dir.norm());
             return ddaHit{dist, index, map[index], wallPos};
         } else
             return std::nullopt;
@@ -170,7 +170,7 @@ struct Renderer3D {
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
             Vec2D ray =
-                player.view + (player.cam * (screenX / columns * 2.0 - 1.0));
+                player.dir + (player.cam() * (screenX / columns * 2.0 - 1.0));
             dda(player, ray, true);
         }
     }

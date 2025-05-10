@@ -19,6 +19,7 @@ struct Vec2D {
     Vec2D norm() const { return *this / mag(); }
     double mag() const { return std::sqrt(x * x + y * y); };
     double dot(const Vec2D& rhs) const { return x * rhs.x + y * rhs.y; }
+    double det(const Vec2D& rhs) const { return x * rhs.y - y * rhs.x; }
 
     Vec2D& operator+=(const Vec2D& rhs) {
         x += rhs.x;

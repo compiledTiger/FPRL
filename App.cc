@@ -8,8 +8,7 @@ int main(int argc, char* argv[]) {
     SDLWindow w(1500, 900, 480, 360);
     FrameBuffer fb(w.RENDER_WIDTH, w.RENDER_HEIGHT);
 
-    Being player(Vec2D(9.5, 5));
-    player.rotate(PI);
+    Being player(Vec2D(9.5, 5.5));
 
     Map<16> map;
     map.generate();
@@ -36,19 +35,27 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            double speed = 0.01;
-            double rotationSpeed = PI / 80;
-
             const Uint8* keyboard = SDL_GetKeyboardState(nullptr);
-            if (keyboard[SDL_SCANCODE_LSHIFT]) speed = 0.02;
-            if (keyboard[SDL_SCANCODE_H])
-                player.vel -= rotationM(PI / 2) * player.dir * speed;
-            if (keyboard[SDL_SCANCODE_J]) player.vel -= player.dir * speed;
-            if (keyboard[SDL_SCANCODE_K]) player.vel += player.dir * speed;
-            if (keyboard[SDL_SCANCODE_L])
-                player.vel += rotationM(PI / 2) * player.dir * speed;
-            if (keyboard[SDL_SCANCODE_Q]) player.rotate(-rotationSpeed);
-            if (keyboard[SDL_SCANCODE_E]) player.rotate(rotationSpeed);
+            if (!player.moving) {
+                if (keyboard[SDL_SCANCODE_H])
+                    player.setTargetPos(player.getTargetPos() +
+                                        rotationM(-PI / 2) * player.dir);
+                if (keyboard[SDL_SCANCODE_J])
+                    player.setTargetPos(player.getTargetPos() -
+                                        player.targetDir);
+                if (keyboard[SDL_SCANCODE_K])
+                    player.setTargetPos(player.getTargetPos() +
+                                        player.targetDir);
+                if (keyboard[SDL_SCANCODE_L])
+                    player.setTargetPos(player.getTargetPos() +
+                                        rotationM(PI / 2) * player.dir);
+            }
+            if (!player.rotating) {
+                if (keyboard[SDL_SCANCODE_Q])
+                    player.targetDir = rotationM(-PI / 2) * player.targetDir;
+                if (keyboard[SDL_SCANCODE_E])
+                    player.targetDir = rotationM(PI / 2) * player.targetDir;
+            }
             quit = quit || keyboard[SDL_SCANCODE_ESCAPE];
             debug = keyboard[SDL_SCANCODE_D];
 

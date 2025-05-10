@@ -1,34 +1,56 @@
 #pragma once
 
 #include <cstdlib>
+#include <iostream>
 #include <optional>
 
+#include "Constants.h"
 #include "Map.h"
-#include "Vec2D.h"
 #include "Mat2D.h"
+#include "Vec2D.h"
 
 struct Being {
-    Vec2D pos = Vec2D(0, 0);
+    Vec2D pos;
+    Vec2D lastPos;
     Vec2D dir = Vec2D(0, -1);
-    Vec2D vel = Vec2D(0, 0);
-    Vec2D view = Vec2D(0, -1);
-    Vec2D cam = Vec2D(1, 0);
+    Vec2D targetDir;
+    bool moving = false;
+    bool rotating = false;
 
-    Being() = default;
-    Being(const Vec2D& pos_) : pos(pos_) {}
+    Being(const Vec2D& pos_)
+        : pos(pos_),
+          lastPos(pos),
+          targetPos(pos),
+          dir(Vec2D(0, -1)),
+          targetDir(dir) {}
 
     void update(Map<16>& map) {
-        vel *= 0.7;
-        auto col = pos + (vel * 5.0);
-        if (map.at(int(col.x), int(col.y))) {
-            vel *= 0.0;
-        }
-        pos += vel;
+        if (map.at(targetPos) && (pos - lastPos).mag() > 0.5)
+            targetPos = lastPos;
+
+        Vec2D posDiff = (targetPos - pos);
+        moving = posDiff.mag() > 0.25;
+        if (moving)
+            pos += posDiff / 8;
+        else
+            pos += posDiff / 4;
+
+        double radDiff = atan2(targetDir.det(dir), targetDir.dot(dir));
+        rotating = abs(radDiff) > 0.1;
+        if (rotating)
+            dir = rotationM(-radDiff / 8) * dir;
+        else
+            dir = rotationM(-radDiff / 4) * dir;
     }
 
-    void rotate(double rad) {
-        dir = rotationM(rad) * dir;
-        view = rotationM(rad) * view;
-        cam = rotationM(rad) * cam;
+    Vec2D getTargetPos() { return targetPos; };
+    void setTargetPos(Vec2D newTargetPos) {
+        lastPos = targetPos;
+        targetPos = newTargetPos;
     }
+
+    Vec2D cam() const { return rotationM(PI / 2) * dir; }
+
+   private:
+    Vec2D targetPos;
 };

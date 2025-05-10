@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Texture.h"
+#include "Vec2D.h"
 
 template <int length_>
 struct Map {
@@ -11,6 +12,7 @@ struct Map {
     // walls() sets values to nullptr
     Map() : walls(), floor(), ceiling() {}
     Texture<32, 32>*& operator[](int i) { return walls[i]; }
+    Texture<32, 32>*& at(Vec2D v) { return at(int(v.x), int(v.y)); }
     Texture<32, 32>*& at(int x, int y) { return walls[y * length + x]; }
     void generate() {
         // TODO destroy
