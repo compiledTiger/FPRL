@@ -19,11 +19,6 @@ struct Renderer3D {
 
     Renderer3D(FrameBuffer& fb_, Map<16>& map_) : fb(fb_), map(map_) {}
 
-    int darknessLevel(double dist) {
-        const int levels = 64;
-        return levels - (levels / (0.9 * dist + 1.00001));
-    };
-
     const double epsilon = 0.001;
     const double baseHeight = double(fb.height);
     double calcHeight(double dist) const {
@@ -54,8 +49,9 @@ struct Renderer3D {
                 double rX = floorPos.x - qX;
                 double rY = floorPos.y - qY;
                 double dist = std::sqrt(dX * dX + dY * dY);
-                auto dl = darknessLevel(dist);
+                // TODO this one seems to filter out a lot, is the loop above to wide? qX and qY takes crazy values
                 if (qX > 0 && qX < 16 && qY > 0 && qY < 16) {
+                    int dl = map.darknessLevel[qX + 16 * qY];
                     Texture<32, 32>* floorTexture = map.floor[qX + 16 * qY];
                     Texture<32, 32>* ceilingTexture = map.ceiling[qX + 16 * qY];
                     Color cF = floorTexture->at(rX * 32, rY * 32, dl);
@@ -88,7 +84,7 @@ struct Renderer3D {
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
                     Color color = hit->wallTexture->at(
-                        texelX, std::round(texelY), darknessLevel(hit->dist));
+                        texelX, std::round(texelY), map.darknessLevel[hit->mapIndex]);
 
                     fb.drawPixel(screenX, screenY, color);
 

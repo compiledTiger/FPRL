@@ -30,7 +30,7 @@ struct Texture {
     }
 
     void generateWall() {
-        for (auto& p : pixels) p = Color(100, 100, 40);
+        for (auto& p : pixels) p = Color(150, 150, 60);
 
         for (int h = 0; h < height; h += 4) {
             for (int w = 0; w < width; ++w) {

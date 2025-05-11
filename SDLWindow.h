@@ -11,12 +11,15 @@ struct SDLWindow {
     const int RENDER_WIDTH;
     const int RENDER_HEIGHT;
 
+    const int SCALING;
+
     SDLWindow(int window_width, int window_height, int render_width,
-              int render_height)
+              int render_height, int scaling)
         : WINDOW_WIDTH(window_width),
           WINDOW_HEIGHT(window_height),
           RENDER_WIDTH(render_width),
-          RENDER_HEIGHT(render_height) {
+          RENDER_HEIGHT(render_height),
+          SCALING(scaling) {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             std::cout << "SDL_INIT_VIDEO failed" << std::endl;
             return;
@@ -41,7 +44,6 @@ struct SDLWindow {
             return;
         }
 
-        // TODO how often?
         clearRenderer();
 
         sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGBA8888,
@@ -54,9 +56,10 @@ struct SDLWindow {
         }
     }
 
-    void drawFrameBuffer(const FrameBuffer& fb, int x, int y, int scaling = 2) {
+    void drawFrameBuffer(const FrameBuffer& fb, int x, int y) {
+        clearRenderer();
         copyFrameBuffer(fb);
-        SDL_Rect destRect = {x, y, fb.width * scaling, fb.height * scaling};
+        SDL_Rect destRect = {x, y, fb.width * SCALING, fb.height * SCALING};
         SDL_RenderCopy(sdlRenderer, sdlTexture, nullptr, &destRect);
         SDL_RenderPresent(sdlRenderer);
     }
