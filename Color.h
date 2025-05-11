@@ -21,4 +21,8 @@ struct Color {
         // Note that we do not change a
         return Color(double(r) * f, double(g) * f, double(b) * f, a);
     }
+
+    Color mean(const Color& rhs) {
+        return Color((r + rhs.r)/2, (g + rhs.g)/2, (b + rhs.b)/2, (a + rhs.a)/2);
+    }
 };

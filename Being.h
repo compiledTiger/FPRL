@@ -24,8 +24,8 @@ struct Being {
           dir(Vec2D(0, -1)),
           targetDir(dir) {}
 
-    void update(Map<16>& map) {
-        if (map[int(targetPos.x) + int(targetPos.y)*16] && (pos - lastPos).mag() > 0.5)
+    void update(Map<MAP_SIZE>& map) {
+        if (map[int(targetPos.x) + int(targetPos.y)*MAP_SIZE] && (pos - lastPos).mag() > 0.5)
             targetPos = lastPos;
 
         Vec2D posDiff = (targetPos - pos);

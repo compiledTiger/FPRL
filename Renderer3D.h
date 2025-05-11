@@ -15,9 +15,9 @@ struct Renderer3D {
     };
 
     FrameBuffer& fb;
-    Map<16>& map;
+    Map<MAP_SIZE>& map;
 
-    Renderer3D(FrameBuffer& fb_, Map<16>& map_) : fb(fb_), map(map_) {}
+    Renderer3D(FrameBuffer& fb_, Map<MAP_SIZE>& map_) : fb(fb_), map(map_) {}
 
     const double epsilon = 0.001;
     const double baseHeight = double(fb.height);
@@ -49,13 +49,20 @@ struct Renderer3D {
                 double rX = floorPos.x - qX;
                 double rY = floorPos.y - qY;
                 double dist = std::sqrt(dX * dX + dY * dY);
-                // TODO this one seems to filter out a lot, is the loop above to wide? qX and qY takes crazy values
-                if (qX > 0 && qX < 16 && qY > 0 && qY < 16) {
-                    int dl = map.darknessLevel[qX + 16 * qY];
-                    Texture<32, 32>* floorTexture = map.floor[qX + 16 * qY];
-                    Texture<32, 32>* ceilingTexture = map.ceiling[qX + 16 * qY];
-                    Color cF = floorTexture->at(rX * 32, rY * 32, dl);
-                    Color cC = ceilingTexture->at(rX * 32, rY * 32, dl);
+                // TODO this one seems to filter out a lot, is the loop above to
+                // wide? qX and qY takes crazy values
+                if (qX > 0 && qX < MAP_SIZE && qY > 0 && qY < MAP_SIZE) {
+                    Texture<32, 32>* floorTexture =
+                        map.floor[qX + MAP_SIZE * qY];
+                    Texture<32, 32>* ceilingTexture =
+                        map.ceiling[qX + MAP_SIZE * qY];
+
+                    int darknessLevel = map.darknessLevel[qX + MAP_SIZE * qY];
+                    Color cF = floorTexture->at(rX * 32, rY * 32, darknessLevel,
+                                                downsampleLevel(dist));
+                    Color cC = ceilingTexture->at(
+                        rX * 32, rY * 32, darknessLevel, downsampleLevel(dist));
+
                     fb.drawPixel(fb.area / 2 + (x + fb.width * y), cF);
                     fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), cC);
                 }
@@ -83,8 +90,10 @@ struct Renderer3D {
 
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
-                    Color color = hit->wallTexture->at(
-                        texelX, std::round(texelY), map.darknessLevel[hit->mapIndex]);
+                    Color color =
+                        hit->wallTexture->at(texelX, std::round(texelY),
+                                             map.darknessLevel[hit->mapIndex],
+                                             downsampleLevel(hit->dist));
 
                     fb.drawPixel(screenX, screenY, color);
 
@@ -95,11 +104,13 @@ struct Renderer3D {
         }
     }
 
+    int downsampleLevel(double dist) { return std::min(1, int(dist / 12)); }
+
     std::optional<ddaHit> dda(const Being& player, Vec2D ray,
                               bool debug = false) {
         Vec2D rayPos = player.pos;
 
-        int index = (int)rayPos.y * 16 + (int)rayPos.x;
+        int index = (int)rayPos.y * MAP_SIZE + (int)rayPos.x;
         int iter = 0;
         double ratio = ray.x / ray.y + 1e-30;
         int xDir = ray.x > 0;
@@ -109,7 +120,7 @@ struct Renderer3D {
         double wallPos = 0;
         Texture<32, 32>* wallTexture;
 
-        while (index != -1 && map[index] == nullptr && ++iter < 20) {
+        while (index != -1 && map[index] == nullptr && ++iter < MAP_SIZE) {
             double wallDistX = rayTargetX - rayPos.x;
             double wallDistY = rayTargetY - rayPos.y;
 
@@ -132,13 +143,13 @@ struct Renderer3D {
                 rayPos.y >= map.length)
                 break;
 
-            index = (int)((rayPos.y + rayTargetY) / 2.0) * 16 +
+            index = (int)((rayPos.y + rayTargetY) / 2.0) * MAP_SIZE +
                     (int)((rayPos.x + rayTargetX) / 2.0);
-            if (index > 255) index = -1;
+            if (index > MAP_AREA) index = -1;
             if (index < 0) index = -1;
             if (debug)
                 fb.drawRect(rayPos.x * mapSquareSize, rayPos.y * mapSquareSize,
-                            5, 5, Color(100, 30, 200));
+                            1, 1, Color(100, 30, 200));
         }
         if (index != -1 && map[index]) {
             double dist = (rayPos - player.pos).dot(player.dir.norm());
@@ -147,17 +158,18 @@ struct Renderer3D {
             return std::nullopt;
     }
 
-    int mapSquareSize = fb.height / 16;
+    int mapSquareSize = fb.height / MAP_SIZE;
     void drawDebug(const Being& player) {
         // Draw map
-        for (int i = 0; i < 16 * 16; ++i) {
-            fb.drawRect((i % 16) * mapSquareSize, (i / 16) * mapSquareSize,
-                        mapSquareSize, mapSquareSize,
+        for (int i = 0; i < MAP_SIZE * MAP_SIZE; ++i) {
+            fb.drawRect((i % MAP_SIZE) * mapSquareSize,
+                        (i / MAP_SIZE) * mapSquareSize, mapSquareSize,
+                        mapSquareSize,
                         Color(80 * (bool)map[i], 70 * (bool)map[i], 70));
         }
 
         auto drawW = [&](Vec2D v) {
-            fb.drawRect(v.x * mapSquareSize, v.y * mapSquareSize, 5, 5,
+            fb.drawRect(v.x * mapSquareSize, v.y * mapSquareSize, 2, 2,
                         Color(255, 255, 255), true);
         };
 

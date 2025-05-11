@@ -5,13 +5,13 @@
 #include "SDLWindow.h"
 
 int main(int argc, char* argv[]) {
-    SDLWindow w(1500, 900, 240, 180, 4);
+    SDLWindow w(1500, 900, 480, 360, 2);
     FrameBuffer fb(w.RENDER_WIDTH, w.RENDER_HEIGHT);
 
     Being player(Vec2D(9.5, 8.5));
     player.targetDir = rotationM(-PI / 2) * player.targetDir;
 
-    Map<16> map;
+    Map<MAP_SIZE> map;
     map.generate();
 
     Renderer3D renderer(fb, map);
