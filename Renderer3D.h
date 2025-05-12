@@ -104,7 +104,10 @@ struct Renderer3D {
         }
     }
 
-    int downsampleLevel(double dist) { return std::min(1, int(dist / 12)); }
+    int downsampleLevel(double dist) {
+        if (dist >= 12) return 1;
+        return 0;
+    }
 
     std::optional<ddaHit> dda(const Being& player, Vec2D ray,
                               bool debug = false) {

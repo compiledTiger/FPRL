@@ -25,7 +25,8 @@ struct Being {
           targetDir(dir) {}
 
     void update(Map<MAP_SIZE>& map) {
-        if (map[int(targetPos.x) + int(targetPos.y)*MAP_SIZE] && (pos - lastPos).mag() > 0.5)
+        if (map[int(targetPos.x) + int(targetPos.y) * MAP_SIZE] &&
+            (pos - lastPos).mag() > 0.3)
             targetPos = lastPos;
 
         Vec2D posDiff = (targetPos - pos);
@@ -35,12 +36,14 @@ struct Being {
         else
             pos += posDiff / 4;
 
-        double radDiff = atan2(targetDir.det(dir), targetDir.dot(dir));
-        rotating = abs(radDiff) > 0.1;
-        if (rotating)
-            dir = rotationM(-radDiff / 8) * dir;
-        else
-            dir = rotationM(-radDiff / 4) * dir;
+        if ((targetDir - dir).mag() > 0.01) {
+            double radDiff = atan2(targetDir.det(dir), targetDir.dot(dir));
+            rotating = abs(radDiff) > 0.1;
+            if (rotating)
+                dir = rotationM(-radDiff / 8) * dir;
+            else
+                dir = rotationM(-radDiff / 4) * dir;
+        }
     }
 
     Vec2D getTargetPos() { return targetPos; };

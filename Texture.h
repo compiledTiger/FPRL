@@ -46,10 +46,10 @@ struct Texture {
                             at(x, y, darknessLevel, downsampleLevel - 1);
                         for (int xOfs = 0; xOfs < blockSize; ++xOfs) {
                             for (int yOfs = 0; yOfs < blockSize; ++yOfs) {
-                                if (!xOfs && !yOfs)
-                                    continue;
-                                mean = mean.mean(at(x + xOfs, y + yOfs, darknessLevel,
-                                   downsampleLevel-1));
+                                if (!xOfs && !yOfs) continue;
+                                mean = mean.mean(at(x + xOfs, y + yOfs,
+                                                    darknessLevel,
+                                                    downsampleLevel - 1));
                             }
                         }
                         for (int xOfs = 0; xOfs < blockSize; ++xOfs) {
