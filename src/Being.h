@@ -33,16 +33,20 @@ struct Being {
         moving = posDiff.mag() > 0.25;
         if (moving)
             pos += posDiff / 8;
-        else
+        else {
             pos += posDiff / 4;
+            if (posDiff.mag() < 0.001) pos = targetPos;
+        }
 
-        if ((targetDir - dir).mag() > 0.01) {
+        if ((targetDir - dir).mag()) {
             double radDiff = atan2(targetDir.det(dir), targetDir.dot(dir));
             rotating = abs(radDiff) > 0.1;
             if (rotating)
                 dir = rotationM(-radDiff / 8) * dir;
-            else
+            else {
                 dir = rotationM(-radDiff / 4) * dir;
+                if (abs(radDiff) < 0.001) dir = targetDir;
+            }
         }
     }
 
