@@ -1,4 +1,4 @@
-OBJS = App.cc
+OBJS = src/App.cc
 
 CC = g++
 
