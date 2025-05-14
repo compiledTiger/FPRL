@@ -127,7 +127,9 @@ struct Renderer3D {
         double wallPos = 0;
         bool verticalSide;
 
-        while (index != -1 && map[index] == nullptr && ++iter < MAP_SIZE) {
+        // *1.5 since diagonal distances are longer than the map size
+        while (index != -1 && map[index] == nullptr &&
+               ++iter < MAP_SIZE * 1.5) {
             double wallDistX = rayTargetX - rayPos.x;
             double wallDistY = rayTargetY - rayPos.y;
 
