@@ -7,11 +7,15 @@
 #include "Mat2D.h"
 
 struct Renderer3D {
+    enum class Side { north, west, south, east };
+
     struct ddaHit {
         double dist;
         int mapIndex;                  // TODO remove
         Texture<32, 32>* wallTexture;  // TODO guaranteed non-null?
         double wallPos;
+        Side side;
+        int sideIndex;
     };
 
     FrameBuffer& fb;
@@ -92,7 +96,7 @@ struct Renderer3D {
                     if (screenY >= fb.height) break;
                     Color color =
                         hit->wallTexture->at(texelX, std::round(texelY),
-                                             map.darknessLevel[hit->mapIndex],
+                                             map.darknessLevel[hit->sideIndex],
                                              downsampleLevel(hit->dist));
 
                     fb.drawPixel(screenX, screenY, color);
@@ -121,7 +125,7 @@ struct Renderer3D {
         int rayTargetX = (int)rayPos.x + xDir;
         int rayTargetY = (int)rayPos.y + yDir;
         double wallPos = 0;
-        Texture<32, 32>* wallTexture;
+        bool verticalSide;
 
         while (index != -1 && map[index] == nullptr && ++iter < MAP_SIZE) {
             double wallDistX = rayTargetX - rayPos.x;
@@ -135,11 +139,13 @@ struct Renderer3D {
                 rayPos.y += wallDistX / ratio;
                 rayTargetX += xDir * 2 - 1;
                 wallPos = rayPos.y - (int)rayPos.y;
+                verticalSide = true;
             } else {
                 rayPos.y += wallDistY;
                 rayPos.x += wallDistY * ratio;
                 rayTargetY += yDir * 2 - 1;
                 wallPos = rayPos.x - (int)rayPos.x;
+                verticalSide = false;
             }
 
             if (rayPos.x < 0 || rayPos.x >= map.length || rayPos.y < 0 ||
@@ -156,7 +162,24 @@ struct Renderer3D {
         }
         if (index != -1 && map[index]) {
             double dist = (rayPos - player.pos).dot(player.dir.norm());
-            return ddaHit{dist, index, map[index], wallPos};
+            Side side = verticalSide ? (xDir ? Side::west : Side::east)
+                                     : (yDir ? Side::north : Side::south);
+            int sideIndex = index;
+            switch (side) {
+                case Side::north:
+                    sideIndex -= MAP_SIZE;
+                    break;
+                case Side::west:
+                    sideIndex -= 1;
+                    break;
+                case Side::south:
+                    sideIndex += MAP_SIZE;
+                    break;
+                case Side::east:
+                    sideIndex += 1;
+                    break;
+            };
+            return ddaHit{dist, index, map[index], wallPos, side, sideIndex};
         } else
             return std::nullopt;
     }

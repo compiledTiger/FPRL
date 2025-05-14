@@ -19,28 +19,23 @@ struct Map {
         wall->generateWall();
         for (int w = 0; w < length; ++w) {
             at(w, 0) = wall;
-        }
-        for (int w = 0; w < length; ++w) {
-            if (w != 9) at(w, 7) = wall;
-        }
-        for (int w = 0; w < length; ++w) {
-            if (w != 9) at(w, 10) = wall;
-        }
-        for (int w = 0; w < length; ++w) {
+            if (w < 9 || w > 10) {
+                at(w, 7) = wall;
+                at(w, 14) = wall;
+            }
+            if (w > 10) at(w, 10) = wall;
+
             at(w, length - 1) = wall;
         }
         for (int h = 0; h < length; ++h) {
             at(0, h) = wall;
-        }
-        for (int h = 0; h < length; ++h) {
-            if (h < 7 || h > 10) at(8, h) = wall;
-        }
-        for (int h = 0; h < length; ++h) {
-            if (h < 7 || h > 10) at(10, h) = wall;
-        }
-        for (int h = 0; h < length; ++h) {
+            if (h < 7 || h > 13) {
+                at(8, h) = wall;
+                at(11, h) = wall;
+            }
             at(length - 1, h) = wall;
         }
+        at(3, 10) = wall;
 
         // TODO destroy
         auto* f = new Texture<32, 32>();
@@ -78,7 +73,7 @@ struct Map {
         darknessLevel[7 * length + 7] = 47;
         darknessLevel[8 * length + 7] = 45;
         darknessLevel[9 * length + 7] = 47;
-        double darknessFactor = 1;
+        double darknessFactor = 1.0;
         for (int h = 0; h < length; ++h) {
             for (int w = 0; w < length; ++w) {
                 darknessLevel[h * length + w] *= darknessFactor;
