@@ -133,9 +133,10 @@ struct Texture {
         int index = 0;
         unsigned char pixel[1];
         while (fread(pixel, sizeof(unsigned char), 1, f)) {
-            pixels[index] = Color(colorTable[pixel[0] * bytesPerColor + 2],
-                                  colorTable[pixel[0] * bytesPerColor + 1],
-                                  colorTable[pixel[0] * bytesPerColor]);
+            pixels[area - index] =
+                Color(colorTable[pixel[0] * bytesPerColor + 2],
+                      colorTable[pixel[0] * bytesPerColor + 1],
+                      colorTable[pixel[0] * bytesPerColor]);
             index++;
         }
 

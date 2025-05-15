@@ -15,27 +15,34 @@ struct Map {
     Texture<32, 32>*& operator[](int i) { return walls[i]; }
     void generate() {
         // TODO destroy
-        auto* wall = new Texture<32, 32>();
-        wall->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_02.bmp");
+        auto* wall02 = new Texture<32, 32>();
+        wall02->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_02.bmp");
+        auto* wall07 = new Texture<32, 32>();
+        wall07->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_07.bmp");
+        auto* wall06 = new Texture<32, 32>();
+        wall06->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_06.bmp");
+        auto* shop = new Texture<32, 32>();
+        shop->loadBmp("assets/rltiles/dc-dngn/dngn_enter_shop.bmp");
         for (int w = 0; w < length; ++w) {
-            at(w, 0) = wall;
+            at(w, 0) = wall02;
             if (w < 9 || w > 10) {
-                at(w, 7) = wall;
-                at(w, 14) = wall;
+                at(w, 7) = wall02;
+                at(w, 14) = wall02;
             }
-            if (w > 10) at(w, 10) = wall;
+            if (w > 10) at(w, 10) = wall02;
 
-            at(w, length - 1) = wall;
+            at(w, length - 1) = wall02;
         }
         for (int h = 0; h < length; ++h) {
-            at(0, h) = wall;
+            at(0, h) = wall07;
             if (h < 7 || h > 13) {
-                at(8, h) = wall;
-                at(11, h) = wall;
+                at(8, h) = wall02;
+                at(11, h) = wall02;
             }
-            at(length - 1, h) = wall;
+            at(length - 1, h) = wall02;
         }
-        at(3, 10) = wall;
+        at(3, 10) = wall06;
+        at(0, 9) = shop;
 
         // TODO destroy
         auto* f = new Texture<32, 32>();
