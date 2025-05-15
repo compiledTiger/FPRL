@@ -109,7 +109,7 @@ struct Renderer3D {
     }
 
     int downsampleLevel(double dist) {
-        if (dist >= 12) return 1;
+        if (dist >= 16) return 1;
         return 0;
     }
 

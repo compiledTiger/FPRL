@@ -110,4 +110,36 @@ struct Texture {
         calcDarknessLevels();
         calcDownsampleLevels();
     }
+
+    void loadBmp(const char* path) {
+        FILE* f = fopen(path, "rb");
+        unsigned char header[54];
+        fread(header, sizeof(unsigned char), 54, f);
+        int w = *(int*)&header[18];
+        int h = *(int*)&header[22];
+        int bitsPerPixel = *(int*)&header[28];
+        int colorsUsed = *(int*)&header[46];
+        // TODO assert same dimensions and 8 bit color mode
+
+        std::cout << "Loading bmp file " << path << " with dimensions " << w
+                  << "x" << h << ", " << colorsUsed << " colors used and "
+                  << bitsPerPixel << " bits per pixel" << std::endl;
+
+        int bytesPerColor = 4;
+        int sizeOfColorTable = colorsUsed * bytesPerColor;
+        unsigned char* colorTable = new unsigned char[sizeOfColorTable];
+        fread(colorTable, sizeof(unsigned char), sizeOfColorTable, f);
+
+        int index = 0;
+        unsigned char pixel[1];
+        while (fread(pixel, sizeof(unsigned char), 1, f)) {
+            pixels[index] = Color(colorTable[pixel[0] * bytesPerColor + 2],
+                                  colorTable[pixel[0] * bytesPerColor + 1],
+                                  colorTable[pixel[0] * bytesPerColor]);
+            index++;
+        }
+
+        calcDarknessLevels();
+        calcDownsampleLevels();
+    }
 };

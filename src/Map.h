@@ -16,7 +16,7 @@ struct Map {
     void generate() {
         // TODO destroy
         auto* wall = new Texture<32, 32>();
-        wall->generateWall();
+        wall->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_02.bmp");
         for (int w = 0; w < length; ++w) {
             at(w, 0) = wall;
             if (w < 9 || w > 10) {
@@ -39,9 +39,9 @@ struct Map {
 
         // TODO destroy
         auto* f = new Texture<32, 32>();
-        f->generateFloor(Color(150, 100, 20));
+        f->loadBmp("assets/rltiles/nh-dngn/lit_corridor.bmp");
         auto* c = new Texture<32, 32>();
-        c->generateFloor(Color(80, 120, 30));
+        c->loadBmp("assets/rltiles/nh-dngn/corridor_light.bmp");
         for (int h = 0; h < length; ++h) {
             for (int w = 0; w < length; ++w) {
                 floor[h * length + w] = f;
