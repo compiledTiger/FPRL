@@ -9,7 +9,8 @@ int main(int argc, char* argv[]) {
     FrameBuffer fb(w.RENDER_WIDTH, w.RENDER_HEIGHT);
 
     Being player(Vec2D(9.5, 8.5));
-    player.targetDir = rotationM(-PI / 2) * player.targetDir;
+    ++player.targetDir;
+    ++player.targetDir;
 
     Map<MAP_SIZE> map;
     map.generate();
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
             if (!player.moving) {
                 if (keyboard[SDL_SCANCODE_H])
                     player.setTargetPos(player.getTargetPos() +
-                                        rotationM(-PI / 2) * player.dir);
+                                        (player.targetDir + 2));
                 if (keyboard[SDL_SCANCODE_J])
                     player.setTargetPos(player.getTargetPos() -
                                         player.targetDir);
@@ -49,13 +50,11 @@ int main(int argc, char* argv[]) {
                                         player.targetDir);
                 if (keyboard[SDL_SCANCODE_L])
                     player.setTargetPos(player.getTargetPos() +
-                                        rotationM(PI / 2) * player.dir);
+                                        (player.targetDir - 2));
             }
             if (!player.rotating) {
-                if (keyboard[SDL_SCANCODE_Q])
-                    player.targetDir = rotationM(-PI / 2) * player.targetDir;
-                if (keyboard[SDL_SCANCODE_E])
-                    player.targetDir = rotationM(PI / 2) * player.targetDir;
+                if (keyboard[SDL_SCANCODE_Q]) ++player.targetDir;
+                if (keyboard[SDL_SCANCODE_E]) --player.targetDir;
             }
             quit = quit || keyboard[SDL_SCANCODE_ESCAPE];
             debug = keyboard[SDL_SCANCODE_D];

@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "Constants.h"
+#include "FixedDir.h"
 #include "Map.h"
 #include "Mat2D.h"
 #include "Vec2D.h"
@@ -12,8 +13,8 @@
 struct Being {
     Vec2D pos;
     Vec2D lastPos;
-    Vec2D dir = Vec2D(0, -1);
-    Vec2D targetDir;
+    FixedDir targetDir;
+    Vec2D dir;
     bool moving = false;
     bool rotating = false;
 
@@ -21,8 +22,8 @@ struct Being {
         : pos(pos_),
           lastPos(pos),
           targetPos(pos),
-          dir(Vec2D(0, -1)),
-          targetDir(dir) {}
+          targetDir(FixedDir::Dir::n),
+          dir(targetDir) {}
 
     void update(Map<MAP_SIZE>& map) {
         if (map[int(targetPos.x) + int(targetPos.y) * MAP_SIZE] &&
@@ -38,14 +39,15 @@ struct Being {
             if (posDiff.mag() < 0.001) pos = targetPos;
         }
 
-        if ((targetDir - dir).mag()) {
-            double radDiff = atan2(targetDir.det(dir), targetDir.dot(dir));
+        Vec2D tDir = Vec2D(targetDir).norm();
+        if ((tDir - dir).mag()) {
+            double radDiff = atan2(tDir.det(dir), tDir.dot(dir));
             rotating = abs(radDiff) > 0.1;
             if (rotating)
                 dir = rotationM(-radDiff / 8) * dir;
             else {
                 dir = rotationM(-radDiff / 4) * dir;
-                if (abs(radDiff) < 0.001) dir = targetDir;
+                if (abs(radDiff) < 0.001) dir = tDir;
             }
         }
     }
