@@ -69,6 +69,8 @@ struct SDLWindow {
         SDL_RenderClear(sdlRenderer);
     }
 
+    const Uint8* getKeyboardState() { return SDL_GetKeyboardState(nullptr); }
+
     ~SDLWindow() {
         SDL_DestroyRenderer(sdlRenderer);
         SDL_DestroyWindow(sdlWindow);

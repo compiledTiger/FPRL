@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            const Uint8* keyboard = SDL_GetKeyboardState(nullptr);
+            const Uint8* keyboard = w.getKeyboardState();
             if (!player.moving) {
                 if (keyboard[SDL_SCANCODE_H])
                     player.setTargetPos(player.getTargetPos() +
