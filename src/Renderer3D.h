@@ -35,42 +35,39 @@ struct Renderer3D {
     }
 
     void drawView(const Being& player) {
-        drawFloorAndCeiling(player);
         rayCast(player);
+        drawFloorAndCeiling(player);
         drawWalls(player);
     }
 
     void drawFloorAndCeiling(const Being& player) {
-        for (int y = 0; y < fb.height / 2; ++y) {
-            double dY = invCalcHeight((y + 1) * 2);
-            for (int x = 0; x < fb.width; ++x) {
-                double dX = double(x - fb.width / 2) / double((fb.width / 2)) *
-                            fov * dY;
+        for (int x = 0; x < fb.width; ++x) {
+            double dY = ddaRes[x]->dist;
+            double ratio =
+                double(x - fb.width / 2) / double((fb.width / 2)) * fov;
+            double dX = ratio * dY;
+            for (int y = calcHeight(dY) / 2; y < fb.height / 2; ++y) {
+                dY = invCalcHeight((y + 1) * 2);
+                dX = dY * ratio;
                 Vec2D floorPos =
                     player.dir * dY + player.cam() * dX + player.pos;
                 int qX = (int)floorPos.x;
                 int qY = (int)floorPos.y;
                 double rX = floorPos.x - qX;
                 double rY = floorPos.y - qY;
-                double dist = std::sqrt(dX * dX + dY * dY);
-                // TODO this one seems to filter out a lot, is the loop above to
-                // wide? qX and qY takes crazy values
-                if (qX > 0 && qX < MAP_SIZE && qY > 0 && qY < MAP_SIZE) {
-                    // TODO remove hardcoding
-                    Texture<32, 32>* floorTexture =
-                        map.floor[qX + MAP_SIZE * qY];
-                    Texture<32, 32>* ceilingTexture =
-                        map.ceiling[qX + MAP_SIZE * qY];
+                // TODO remove hardcoding
+                Texture<32, 32>* floorTexture = map.floor[qX + MAP_SIZE * qY];
+                Texture<32, 32>* ceilingTexture =
+                    map.ceiling[qX + MAP_SIZE * qY];
 
-                    int darknessLevel = map.darknessLevel[qX + MAP_SIZE * qY];
-                    Color cF = floorTexture->at(rX * 32, rY * 32, darknessLevel,
-                                                downsampleLevel(dist));
-                    Color cC = ceilingTexture->at(
-                        rX * 32, rY * 32, darknessLevel, downsampleLevel(dist));
+                int darknessLevel = map.darknessLevel[qX + MAP_SIZE * qY];
+                Color cF = floorTexture->at(rX * 32, rY * 32, darknessLevel,
+                                            downsampleLevel(dY));
+                Color cC = ceilingTexture->at(rX * 32, rY * 32, darknessLevel,
+                                              downsampleLevel(dY));
 
-                    fb.drawPixel(fb.area / 2 + (x + fb.width * y), cF);
-                    fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), cC);
-                }
+                fb.drawPixel(fb.area / 2 + (x + fb.width * y), cF);
+                fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), cC);
             }
         }
     }
