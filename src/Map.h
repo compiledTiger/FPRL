@@ -1,5 +1,8 @@
 #pragma once
 
+#include <unordered_map>
+#include <vector>
+
 #include "Texture.h"
 #include "Vec2D.h"
 
@@ -10,81 +13,90 @@ struct Map {
     Texture<32, 32>* floor[length * length];
     Texture<32, 32>* ceiling[length * length];
     int darknessLevel[length * length];
+
+    std::vector<Texture<32, 32>> textures;
+    std::unordered_map<std::string, int> textureMap;
+
     // walls() sets values to nullptr
-    Map() : walls(), floor(), ceiling(), darknessLevel() {}
+    Map() : walls(), floor(), ceiling(), darknessLevel() {
+        // TODO destroy
+        loadTexture("assets/rltiles/nh-dngn/floor_of_a_room.bmp", "stone");
+        loadTexture("assets/rltiles/dc-dngn/dngn_enter_shop.bmp", "shop");
+    }
     Texture<32, 32>*& operator[](int i) { return walls[i]; }
-    void generate() {
-        // TODO destroy
-        auto* wall02 = new Texture<32, 32>();
-        wall02->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_02.bmp");
-        auto* wall07 = new Texture<32, 32>();
-        wall07->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_07.bmp");
-        auto* wall06 = new Texture<32, 32>();
-        wall06->loadBmp("assets/rltiles/dc-dngn/dngn_rock_wall_06.bmp");
-        auto* shop = new Texture<32, 32>();
-        shop->loadBmp("assets/rltiles/dc-dngn/dngn_enter_shop.bmp");
-        for (int w = 0; w < length; ++w) {
-            at(w, 0) = wall02;
-            if (w < 9 || w > 10) {
-                at(w, 7) = wall02;
-                at(w, 14) = wall02;
-            }
-            if (w > 10) at(w, 10) = wall02;
 
-            at(w, length - 1) = wall02;
-        }
-        for (int h = 0; h < length; ++h) {
-            at(0, h) = wall07;
-            if (h < 7 || h > 13) {
-                at(8, h) = wall02;
-                at(11, h) = wall02;
-            }
-            at(length - 1, h) = wall02;
-        }
-        at(3, 10) = wall06;
-        at(0, 9) = shop;
+    void loadTexture(const std::string path, const std::string name) {
+        Texture<32, 32> t;
+        t.loadBmp(path.c_str());
+        textures.push_back(t);
+        textureMap[name] = textures.size() - 1;
+    }
 
-        // TODO destroy
-        auto* f = new Texture<32, 32>();
-        f->loadBmp("assets/rltiles/nh-dngn/lit_corridor.bmp");
-        auto* c = new Texture<32, 32>();
-        c->loadBmp("assets/rltiles/nh-dngn/corridor_light.bmp");
-        for (int h = 0; h < length; ++h) {
-            for (int w = 0; w < length; ++w) {
-                floor[h * length + w] = f;
-                ceiling[h * length + w] = c;
-                darknessLevel[h * length + w] = 50;
+    Vec2D generate() {
+        Texture<32, 32>* stone = &textures[textureMap["stone"]];
+
+        for (int y = 0; y < length; ++y) {
+            for (int x = 0; x < length; ++x) {
+                at(x, y) = stone;
+                floor[y * length + x] = stone;
+                ceiling[y * length + x] = stone;
+                darknessLevel[y * length + x] = 40;
             }
         }
-        darknessLevel[8 * length + 3] = 20;
-        darknessLevel[8 * length + 2] = 30;
-        darknessLevel[8 * length + 4] = 30;
-        darknessLevel[9 * length + 3] = 30;
-        darknessLevel[9 * length + 2] = 35;
-        darknessLevel[9 * length + 4] = 35;
-        darknessLevel[8 * length + 1] = 35;
-        darknessLevel[8 * length + 5] = 35;
-        darknessLevel[9 * length + 1] = 40;
-        darknessLevel[9 * length + 5] = 40;
-        darknessLevel[7 * length + 3] = 30;
-        darknessLevel[7 * length + 2] = 35;
-        darknessLevel[7 * length + 4] = 35;
-        darknessLevel[7 * length + 1] = 40;
-        darknessLevel[7 * length + 5] = 40;
-        darknessLevel[7 * length + 0] = 45;
-        darknessLevel[8 * length + 0] = 40;
-        darknessLevel[9 * length + 0] = 45;
-        darknessLevel[7 * length + 6] = 45;
-        darknessLevel[8 * length + 6] = 40;
-        darknessLevel[9 * length + 6] = 45;
-        darknessLevel[7 * length + 7] = 47;
-        darknessLevel[8 * length + 7] = 45;
-        darknessLevel[9 * length + 7] = 47;
-        double darknessFactor = 0.7;
-        for (int h = 0; h < length; ++h) {
-            for (int w = 0; w < length; ++w) {
-                darknessLevel[h * length + w] *= darknessFactor;
+
+        srand(time(0));
+        Vec2D mid1 = genRoom();
+        Vec2D mid2 = genRoom();
+        Vec2D mid3 = genRoom();
+        Vec2D mid4 = genRoom();
+        Vec2D mid5 = genRoom();
+        Vec2D mid6 = genRoom();
+        connectRooms(mid1, mid2);
+        connectRooms(mid1, mid3);
+        connectRooms(mid1, mid4);
+        connectRooms(mid3, mid4);
+        connectRooms(mid2, mid5);
+        connectRooms(mid5, mid6);
+        // TODO player seems to be able to spawn on shop tiles!
+        return mid1 + Vec2D(0.5, 0.5);
+    }
+
+    Vec2D genRoom() {
+        Texture<32, 32>* shop = &textures[textureMap["shop"]];
+
+        int roomWidth = (rand() % 8) + 2;
+        int roomHeight = (rand() % 8) + 2;
+        int roomNWCornerX = rand() % (length - roomWidth - 1) + 1;
+        int roomNWCornerY = rand() % (length - roomHeight - 1) + 1;
+        int dl = 40;
+        for (int x = roomNWCornerX; x < roomNWCornerX + roomWidth; ++x) {
+            for (int y = roomNWCornerY; y < roomNWCornerY + roomHeight; ++y) {
+                darknessLevel[y * length + x] = dl;
+                at(x, y) = nullptr;
+                if (y == roomNWCornerY && x - roomNWCornerX == 7)
+                    at(x, y - 1) = shop;
+                if (x == roomNWCornerX && y - roomNWCornerY == 3)
+                    at(x - 1, y) = shop;
             }
+            dl -= 4;
+            if (dl < 0) dl = 0;
+        }
+        return Vec2D(roomNWCornerX + roomWidth / 2,
+                     roomNWCornerY + roomHeight / 2);
+    }
+
+    void connectRooms(Vec2D mid1, Vec2D mid2) {
+        int xDir = mid1.x > mid2.x ? -1 : 1;
+        int yDir = mid1.y > mid2.y ? -1 : 1;
+        int corX = mid1.x;
+        int corY = mid1.y;
+        while (corX != mid2.x) {
+            corX += xDir;
+            at(corX, corY) = nullptr;
+        }
+        while (corY != mid2.y) {
+            corY += yDir;
+            at(corX, corY) = nullptr;
         }
     }
 

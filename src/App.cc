@@ -8,12 +8,12 @@ int main(int argc, char* argv[]) {
     SDLWindow w(600, 900, 300, 300, 2);
     FrameBuffer fb(w.RENDER_WIDTH, w.RENDER_HEIGHT);
 
-    Being player(Vec2D(9.5, 8.5));
-    ++player.targetDir;
-    ++player.targetDir;
-
     Map<MAP_SIZE> map;
-    map.generate();
+    Vec2D startingPos = map.generate();
+
+    Being player(startingPos);
+    ++player.targetDir;
+    ++player.targetDir;
 
     Renderer3D renderer(fb, map);
 
