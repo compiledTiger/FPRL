@@ -61,10 +61,8 @@ struct Renderer3D {
                     map.ceiling[qX + MAP_SIZE * qY];
 
                 int darknessLevel = map.darknessLevel[qX + MAP_SIZE * qY];
-                Color cF = floorTexture->at(rX * 32, rY * 32, darknessLevel,
-                                            downsampleLevel(dY));
-                Color cC = ceilingTexture->at(rX * 32, rY * 32, darknessLevel,
-                                              downsampleLevel(dY));
+                Color cF = floorTexture->at(rX * 32, rY * 32, darknessLevel);
+                Color cC = ceilingTexture->at(rX * 32, rY * 32, darknessLevel);
 
                 fb.drawPixel(fb.area / 2 + (x + fb.width * y), cF);
                 fb.drawPixel(fb.area / 2 - (-x + fb.width * (y + 1)), cC);
@@ -91,8 +89,7 @@ struct Renderer3D {
                     if (screenY >= fb.height) break;
                     Color color =
                         wallTexture->at(texelX, std::round(texelY),
-                                        map.darknessLevel[hit->normalIndex],
-                                        downsampleLevel(hit->dist));
+                                        map.darknessLevel[hit->normalIndex]);
 
                     fb.drawPixel(screenX, screenY, color);
 
@@ -183,11 +180,6 @@ struct Renderer3D {
             return ddaHit{index, dist, wallPos, normalIndex};
         } else
             return std::nullopt;
-    }
-
-    int downsampleLevel(double dist) {
-        if (dist >= 16) return 1;
-        return 0;
     }
 
     int mapSquareSize = fb.height / MAP_SIZE;

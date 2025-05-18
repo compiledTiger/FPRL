@@ -80,7 +80,7 @@ struct Map {
         darknessLevel[7 * length + 7] = 47;
         darknessLevel[8 * length + 7] = 45;
         darknessLevel[9 * length + 7] = 47;
-        double darknessFactor = 1.0;
+        double darknessFactor = 0.7;
         for (int h = 0; h < length; ++h) {
             for (int w = 0; w < length; ++w) {
                 darknessLevel[h * length + w] *= darknessFactor;

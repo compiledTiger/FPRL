@@ -10,17 +10,15 @@ struct Texture {
     static const int height = height_;
     static const int area = width * height;
     static const int darknessLevels = 64;
-    static const int downsampleLevels = 2;
-    static const int nPixels = downsampleLevels * darknessLevels * area;
+    static const int nPixels = darknessLevels * area;
     Color pixels[nPixels];
 
     // pixels() sets values to nullptr
     Texture() : pixels() {}
 
-    Color& at(int x, int y, int darknessLevel = 0, int downsampleLevel = 0) {
+    Color& at(int x, int y, int darknessLevel = 0) {
         // TODO break out index?
-        return pixels[downsampleLevel * darknessLevels * area +
-                      darknessLevel * area + y * width + x];
+        return pixels[darknessLevel * area + y * width + x];
     }
 
     void calcDarknessLevels() {
@@ -30,36 +28,6 @@ struct Texture {
                 pixels[darknessLevel * area + i] =
                     pixels[i] * (double(darknessLevels - darknessLevel) /
                                  double(darknessLevels));
-            }
-        }
-    }
-
-    void calcDownsampleLevels() {
-        for (int downsampleLevel = 1; downsampleLevel < downsampleLevels;
-             ++downsampleLevel) {
-            int blockSize = pow(2, downsampleLevel);
-            for (int darknessLevel = 1; darknessLevel < darknessLevels;
-                 ++darknessLevel) {
-                for (int x = 0; x < width; x += blockSize) {
-                    for (int y = 0; y < height; y += blockSize) {
-                        Color mean =
-                            at(x, y, darknessLevel, downsampleLevel - 1);
-                        for (int xOfs = 0; xOfs < blockSize; ++xOfs) {
-                            for (int yOfs = 0; yOfs < blockSize; ++yOfs) {
-                                if (!xOfs && !yOfs) continue;
-                                mean = mean.mean(at(x + xOfs, y + yOfs,
-                                                    darknessLevel,
-                                                    downsampleLevel - 1));
-                            }
-                        }
-                        for (int xOfs = 0; xOfs < blockSize; ++xOfs) {
-                            for (int yOfs = 0; yOfs < blockSize; ++yOfs) {
-                                at(x + xOfs, y + yOfs, darknessLevel,
-                                   downsampleLevel) = mean;
-                            }
-                        }
-                    }
-                }
             }
         }
     }
@@ -85,7 +53,6 @@ struct Texture {
             offset = !offset;
         }
         calcDarknessLevels();
-        calcDownsampleLevels();
     }
     void generateFloor(Color c) {
         for (auto& p : pixels) p = c;
@@ -108,7 +75,6 @@ struct Texture {
             offset = !offset;
         }
         calcDarknessLevels();
-        calcDownsampleLevels();
     }
 
     void loadBmp(const char* path) {
@@ -141,6 +107,5 @@ struct Texture {
         }
 
         calcDarknessLevels();
-        calcDownsampleLevels();
     }
 };
