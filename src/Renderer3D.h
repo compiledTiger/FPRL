@@ -10,18 +10,18 @@ struct Renderer3D {
     enum class Side { north, west, south, east };
 
     struct ddaHit {
+        int mapIndex;
         double dist;
-        int mapIndex;                  // TODO remove
-        Texture<32, 32>* wallTexture;  // TODO guaranteed non-null?
         double wallPos;
-        Side side;
-        int sideIndex;
+        int normalIndex;
     };
 
     FrameBuffer& fb;
     Map<MAP_SIZE>& map;
+    std::optional<ddaHit>* ddaRes;
 
-    Renderer3D(FrameBuffer& fb_, Map<MAP_SIZE>& map_) : fb(fb_), map(map_) {}
+    Renderer3D(FrameBuffer& fb_, Map<MAP_SIZE>& map_)
+        : fb(fb_), map(map_), ddaRes(new std::optional<ddaHit>[fb.width]) {}
 
     const double epsilon = 0.001;
     const double baseHeight = double(fb.height);
@@ -36,6 +36,7 @@ struct Renderer3D {
 
     void drawView(const Being& player) {
         drawFloorAndCeiling(player);
+        rayCast(player);
         drawWalls(player);
     }
 
@@ -47,7 +48,6 @@ struct Renderer3D {
                             fov * dY;
                 Vec2D floorPos =
                     player.dir * dY + player.cam() * dX + player.pos;
-                // TODO remove hardcoding
                 int qX = (int)floorPos.x;
                 int qY = (int)floorPos.y;
                 double rX = floorPos.x - qX;
@@ -56,6 +56,7 @@ struct Renderer3D {
                 // TODO this one seems to filter out a lot, is the loop above to
                 // wide? qX and qY takes crazy values
                 if (qX > 0 && qX < MAP_SIZE && qY > 0 && qY < MAP_SIZE) {
+                    // TODO remove hardcoding
                     Texture<32, 32>* floorTexture =
                         map.floor[qX + MAP_SIZE * qY];
                     Texture<32, 32>* ceilingTexture =
@@ -75,29 +76,26 @@ struct Renderer3D {
     }
 
     void drawWalls(const Being& player) {
-        int columns = fb.width;
-        for (double screenX = 0; screenX < columns; ++screenX) {
-            Vec2D ray = player.dir +
-                        (player.cam() * fov * (screenX / columns * 2.0 - 1.0));
-            auto hit = dda(player, ray);
+        for (int screenX = 0; screenX < fb.width; ++screenX) {
+            auto hit = ddaRes[screenX];
             if (hit) {
                 double wallHeight = calcHeight(hit->dist);
 
                 double wallTop = (double(fb.height) - wallHeight) / 2.0;
                 int screenY = std::max(wallTop, 0.0);
 
-                int texelX = hit->wallPos * hit->wallTexture->width;
+                auto* wallTexture = map[hit->mapIndex];
+                int texelX = hit->wallPos * wallTexture->width;
                 double texelY = 0;
-                double dTexelY =
-                    ((double)hit->wallTexture->height) / wallHeight;
+                double dTexelY = ((double)wallTexture->height) / wallHeight;
                 texelY += dTexelY * -std::min(wallTop, 0.0);
 
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
                     Color color =
-                        hit->wallTexture->at(texelX, std::round(texelY),
-                                             map.darknessLevel[hit->sideIndex],
-                                             downsampleLevel(hit->dist));
+                        wallTexture->at(texelX, std::round(texelY),
+                                        map.darknessLevel[hit->normalIndex],
+                                        downsampleLevel(hit->dist));
 
                     fb.drawPixel(screenX, screenY, color);
 
@@ -108,9 +106,13 @@ struct Renderer3D {
         }
     }
 
-    int downsampleLevel(double dist) {
-        if (dist >= 16) return 1;
-        return 0;
+    void rayCast(const Being& player) {
+        Vec2D ray = player.dir - player.cam() * fov;
+        Vec2D dRay = player.cam() * fov * (2.0 / fb.width);
+        for (int screenX = 0; screenX < fb.width; ++screenX) {
+            ddaRes[screenX] = dda(player, ray);
+            ray += dRay;
+        }
     }
 
     std::optional<ddaHit> dda(const Being& player, Vec2D ray,
@@ -166,24 +168,29 @@ struct Renderer3D {
             double dist = (rayPos - player.pos).dot(player.dir.norm());
             Side side = verticalSide ? (xDir ? Side::west : Side::east)
                                      : (yDir ? Side::north : Side::south);
-            int sideIndex = index;
+            int normalIndex = index;
             switch (side) {
                 case Side::north:
-                    sideIndex -= MAP_SIZE;
+                    normalIndex -= MAP_SIZE;
                     break;
                 case Side::west:
-                    sideIndex -= 1;
+                    normalIndex -= 1;
                     break;
                 case Side::south:
-                    sideIndex += MAP_SIZE;
+                    normalIndex += MAP_SIZE;
                     break;
                 case Side::east:
-                    sideIndex += 1;
+                    normalIndex += 1;
                     break;
             };
-            return ddaHit{dist, index, map[index], wallPos, side, sideIndex};
+            return ddaHit{index, dist, wallPos, normalIndex};
         } else
             return std::nullopt;
+    }
+
+    int downsampleLevel(double dist) {
+        if (dist >= 16) return 1;
+        return 0;
     }
 
     int mapSquareSize = fb.height / MAP_SIZE;
