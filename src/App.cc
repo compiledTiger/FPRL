@@ -5,7 +5,7 @@
 #include "SDLWindow.h"
 
 int main(int argc, char* argv[]) {
-    SDLWindow w(1500, 900, 480, 360, 2);
+    SDLWindow w(600, 900, 300, 300, 2);
     FrameBuffer fb(w.RENDER_WIDTH, w.RENDER_HEIGHT);
 
     Being player(Vec2D(9.5, 8.5));
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
                 renderer.drawDebug(player);
             }
 
-            w.drawFrameBuffer(fb, 240, 60);
+            w.drawFrameBuffer(fb, 0, 0);
 
             ++frames;
             if (frames % ticksPerSecond == 0) {
