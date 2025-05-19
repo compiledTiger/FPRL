@@ -9,7 +9,7 @@
 struct Renderer3D {
     enum class Side { north, west, south, east };
 
-    struct ddaHit {
+    struct DdaHit {
         int mapIndex;
         double dist;
         double wallPos;
@@ -18,10 +18,10 @@ struct Renderer3D {
 
     FrameBuffer& fb;
     Map<MAP_SIZE>& map;
-    std::optional<ddaHit>* ddaRes;
+    std::optional<DdaHit>* ddaRes;
 
     Renderer3D(FrameBuffer& fb_, Map<MAP_SIZE>& map_)
-        : fb(fb_), map(map_), ddaRes(new std::optional<ddaHit>[fb.width]) {}
+        : fb(fb_), map(map_), ddaRes(new std::optional<DdaHit>[fb.width]) {}
 
     double fov = 0.75;
     // TODO what is the relationship to fov?
@@ -109,7 +109,7 @@ struct Renderer3D {
         }
     }
 
-    std::optional<ddaHit> dda(const Being& player, Vec2D ray,
+    std::optional<DdaHit> dda(const Being& player, Vec2D ray,
                               bool debug = false) {
         Vec2D rayPos = player.pos;
 
@@ -169,15 +169,17 @@ struct Renderer3D {
                     break;
                 case Side::west:
                     normalIndex -= 1;
+                    wallPos = 1 - wallPos;
                     break;
                 case Side::south:
                     normalIndex += MAP_SIZE;
+                    wallPos = 1 - wallPos;
                     break;
                 case Side::east:
                     normalIndex += 1;
                     break;
             };
-            return ddaHit{index, dist, wallPos, normalIndex};
+            return DdaHit{index, dist, wallPos, normalIndex};
         } else
             return std::nullopt;
     }
