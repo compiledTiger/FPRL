@@ -1,3 +1,4 @@
 RPG
 *.swp
 perf.*
+src/*.o

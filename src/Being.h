@@ -26,8 +26,10 @@ class Being {
     bool moving = false;
     bool rotating = false;
     bool invalidMove = false;
+    Texture<32, 32>* texture;
 
-    Being(Map<MAP_SIZE>* map_, int x_, int y_)
+    Being(Map<MAP_SIZE>* map_, int x_, int y_,
+          Texture<32, 32>* texture_ = nullptr)
         : map(map_),
           x(x_),
           y(y_),
@@ -35,7 +37,10 @@ class Being {
           lastPos(targetPos),
           pos(targetPos),
           targetDir(FixedDir::Dir::n),
-          dir(targetDir) {}
+          dir(targetDir),
+          texture(texture_) {
+        map->beings[x + y * MAP_SIZE] = this;
+    }
 
     void update() {
         if (invalidMove && (pos - lastPos).mag() > 0.3) targetPos = lastPos;

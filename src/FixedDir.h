@@ -17,6 +17,8 @@ struct FixedDir {
         for (int i = 0; i < n; ++i) --copy;
         return copy;
     }
+    bool operator==(const FixedDir& rhs) const { return dir == rhs.dir; }
+    bool operator!=(const FixedDir& rhs) const { return !(*this == rhs); }
 
     // TODO align rotations globally
     // Counter clockwise

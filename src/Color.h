@@ -22,7 +22,14 @@ struct Color {
         return Color(double(r) * f, double(g) * f, double(b) * f, a);
     }
 
+    bool operator==(const Color& rhs) const {
+        return r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a;
+    }
+
+    bool operator!=(const Color& rhs) const { return !(*this == rhs); }
+
     Color mean(const Color& rhs) {
-        return Color((r + rhs.r)/2, (g + rhs.g)/2, (b + rhs.b)/2, (a + rhs.a)/2);
+        return Color((r + rhs.r) / 2, (g + rhs.g) / 2, (b + rhs.b) / 2,
+                     (a + rhs.a) / 2);
     }
 };

@@ -7,32 +7,33 @@
 #include "Mat2D.h"
 
 struct Renderer3D {
-    enum class Side { north, west, south, east };
-
     struct DdaHit {
         int mapIndex;
         double dist;
         double wallPos;
         int normalIndex;
-        DdaHit(int mapIndex_, double dist_, double wallPos_, Side side_)
+        DdaHit(int mapIndex_, double dist_, double wallPos_, FixedDir side_)
             : mapIndex(mapIndex_),
               dist(dist_),
               wallPos(wallPos_),
               normalIndex(mapIndex_) {
-            switch (side_) {
-                case Side::north:
+            switch (side_.dir) {
+                case FixedDir::Dir::n:
                     normalIndex -= MAP_SIZE;
                     break;
-                case Side::west:
+                case FixedDir::Dir::w:
                     normalIndex -= 1;
                     wallPos = 1 - wallPos;
                     break;
-                case Side::south:
+                case FixedDir::Dir::s:
                     normalIndex += MAP_SIZE;
                     wallPos = 1 - wallPos;
                     break;
-                case Side::east:
+                case FixedDir::Dir::e:
                     normalIndex += 1;
+                    break;
+                default:
+                    // TODO nw, ne, sw, se
                     break;
             };
         }
@@ -136,7 +137,7 @@ struct Renderer3D {
                 double wallTop = (double(fb.height) - wallHeight) / 2.0;
                 int screenY = std::max(wallTop, 0.0);
 
-                auto* wallTexture = map.beings[hit->mapIndex];
+                auto* wallTexture = map.beings[hit->mapIndex]->texture;
                 int texelX = hit->wallPos * wallTexture->width;
                 double texelY = 0;
                 double dTexelY = ((double)wallTexture->height) / wallHeight;
@@ -144,11 +145,11 @@ struct Renderer3D {
 
                 for (int i = 0; i < wallHeight; ++i) {
                     if (screenY >= fb.height) break;
+
                     Color color =
                         wallTexture->at(texelX, std::round(texelY),
                                         map.darknessLevel[hit->normalIndex]);
-
-                    fb.drawPixel(screenX, screenY, color);
+                    if (color.a) fb.drawPixel(screenX, screenY, color);
 
                     ++screenY;
                     texelY += dTexelY;
@@ -218,11 +219,13 @@ struct Renderer3D {
                             1, 1, Color(100, 30, 200));
             auto being = map.beings[index];
             auto wall = map.walls[index];
-            if (being || wall) {
+            if ((being && !beings[screenX]) || wall) {
                 double dist = (rayPos - player.getPos()).dot(player.dir.norm());
-                Side side = verticalSide ? (xDir ? Side::west : Side::east)
-                                         : (yDir ? Side::north : Side::south);
-                if (being) beings[screenX] = DdaHit(index, dist, wallPos, side);
+                FixedDir side =
+                    verticalSide ? (xDir ? FixedDir::Dir::w : FixedDir::Dir::e)
+                                 : (yDir ? FixedDir::Dir::n : FixedDir::Dir::s);
+                if (being && being->targetDir == side)
+                    beings[screenX] = DdaHit(index, dist, wallPos, side);
                 if (wall) walls[screenX] = DdaHit(index, dist, wallPos, side);
             }
         }

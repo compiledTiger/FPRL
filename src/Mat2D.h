@@ -18,6 +18,6 @@ struct Mat2D {
     }
 };
 
-Mat2D rotationM(double rad) {
+inline Mat2D rotationM(double rad) {
     return Mat2D(std::cos(rad), -std::sin(rad), std::sin(rad), std::cos(rad));
 }

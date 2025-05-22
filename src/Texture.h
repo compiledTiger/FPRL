@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cmath>
+#include <cstdio>
+#include <iostream>
 
 #include "Color.h"
 
@@ -99,10 +101,17 @@ struct Texture {
         int index = 0;
         unsigned char pixel[1];
         while (fread(pixel, sizeof(unsigned char), 1, f)) {
-            pixels[area - index] =
-                Color(colorTable[pixel[0] * bytesPerColor + 2],
-                      colorTable[pixel[0] * bytesPerColor + 1],
-                      colorTable[pixel[0] * bytesPerColor]);
+            Color color(colorTable[pixel[0] * bytesPerColor + 2],
+                        colorTable[pixel[0] * bytesPerColor + 1],
+                        colorTable[pixel[0] * bytesPerColor]);
+
+            std::cout << (int)color.r << " " << (int)color.g << " "
+                      << (int)color.b << " " << (int)color.a << std::endl;
+
+            if (color != Color(71, 108, 108))  // TODO put somewhere
+                pixels[area - index] = color;
+            else
+                pixels[area - index] = Color(0, 0, 0, 0);
             index++;
         }
 
