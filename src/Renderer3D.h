@@ -14,14 +14,40 @@ struct Renderer3D {
         double dist;
         double wallPos;
         int normalIndex;
+        DdaHit(int mapIndex_, double dist_, double wallPos_, Side side_)
+            : mapIndex(mapIndex_),
+              dist(dist_),
+              wallPos(wallPos_),
+              normalIndex(mapIndex_) {
+            switch (side_) {
+                case Side::north:
+                    normalIndex -= MAP_SIZE;
+                    break;
+                case Side::west:
+                    normalIndex -= 1;
+                    wallPos = 1 - wallPos;
+                    break;
+                case Side::south:
+                    normalIndex += MAP_SIZE;
+                    wallPos = 1 - wallPos;
+                    break;
+                case Side::east:
+                    normalIndex += 1;
+                    break;
+            };
+        }
     };
 
     FrameBuffer& fb;
     Map<MAP_SIZE>& map;
-    std::optional<DdaHit>* ddaRes;
+    std::optional<DdaHit>* walls;
+    std::optional<DdaHit>* beings;  // Currently one being per x
 
     Renderer3D(FrameBuffer& fb_, Map<MAP_SIZE>& map_)
-        : fb(fb_), map(map_), ddaRes(new std::optional<DdaHit>[fb.width]) {}
+        : fb(fb_),
+          map(map_),
+          walls(new std::optional<DdaHit>[fb.width]),
+          beings(new std::optional<DdaHit>[fb.width]) {}
 
     double fov = 0.75;
     // TODO what is the relationship to fov?
@@ -38,11 +64,12 @@ struct Renderer3D {
         rayCast(player);
         drawFloorAndCeiling(player);
         drawWalls(player);
+        drawBeings(player);
     }
 
     void drawFloorAndCeiling(const Being& player) {
         for (int x = 0; x < fb.width; ++x) {
-            double dY = ddaRes[x]->dist;
+            double dY = walls[x]->dist;
             double ratio =
                 double(x - fb.width / 2) / double((fb.width / 2)) * fov;
             double dX = ratio * dY;
@@ -50,7 +77,7 @@ struct Renderer3D {
                 dY = invCalcHeight((y + 1) * 2);
                 dX = dY * ratio;
                 Vec2D floorPos =
-                    player.dir * dY + player.cam() * dX + player.pos;
+                    player.dir * dY + player.cam() * dX + player.getPos();
                 int qX = (int)floorPos.x;
                 int qY = (int)floorPos.y;
                 double rX = floorPos.x - qX;
@@ -72,7 +99,7 @@ struct Renderer3D {
 
     void drawWalls(const Being& player) {
         for (int screenX = 0; screenX < fb.width; ++screenX) {
-            auto hit = ddaRes[screenX];
+            auto hit = walls[screenX];
             if (hit) {
                 double wallHeight = calcHeight(hit->dist);
 
@@ -100,18 +127,48 @@ struct Renderer3D {
         }
     }
 
+    void drawBeings(const Being& player) {
+        for (int screenX = 0; screenX < fb.width; ++screenX) {
+            auto hit = beings[screenX];
+            if (hit) {
+                double wallHeight = calcHeight(hit->dist);
+
+                double wallTop = (double(fb.height) - wallHeight) / 2.0;
+                int screenY = std::max(wallTop, 0.0);
+
+                auto* wallTexture = map.beings[hit->mapIndex];
+                int texelX = hit->wallPos * wallTexture->width;
+                double texelY = 0;
+                double dTexelY = ((double)wallTexture->height) / wallHeight;
+                texelY += dTexelY * -std::min(wallTop, 0.0);
+
+                for (int i = 0; i < wallHeight; ++i) {
+                    if (screenY >= fb.height) break;
+                    Color color =
+                        wallTexture->at(texelX, std::round(texelY),
+                                        map.darknessLevel[hit->normalIndex]);
+
+                    fb.drawPixel(screenX, screenY, color);
+
+                    ++screenY;
+                    texelY += dTexelY;
+                }
+            }
+        }
+    }
+
     void rayCast(const Being& player) {
         Vec2D ray = player.dir - player.cam() * fov;
         Vec2D dRay = player.cam() * fov * (2.0 / fb.width);
         for (int screenX = 0; screenX < fb.width; ++screenX) {
-            ddaRes[screenX] = dda(player, ray);
+            dda(player, ray, screenX);
+            dda(player, ray, screenX);
             ray += dRay;
         }
     }
 
-    std::optional<DdaHit> dda(const Being& player, Vec2D ray,
-                              bool debug = false) {
-        Vec2D rayPos = player.pos;
+    void dda(const Being& player, Vec2D ray, int screenX, bool debug = false) {
+        Vec2D rayPos = player.getPos();
 
         int index = (int)rayPos.y * MAP_SIZE + (int)rayPos.x;
         int iter = 0;
@@ -123,9 +180,11 @@ struct Renderer3D {
         double wallPos = 0;
         bool verticalSide;
 
+        walls[screenX] = std::nullopt;
+        beings[screenX] = std::nullopt;
+
         // *1.5 since diagonal distances are longer than the map size
-        while (index != -1 && map[index] == nullptr &&
-               ++iter < MAP_SIZE * 1.5) {
+        while (map.walls[index] == nullptr && ++iter < MAP_SIZE * 1.5) {
             double wallDistX = rayTargetX - rayPos.x;
             double wallDistY = rayTargetY - rayPos.y;
 
@@ -152,36 +211,21 @@ struct Renderer3D {
 
             index = (int)((rayPos.y + rayTargetY) / 2.0) * MAP_SIZE +
                     (int)((rayPos.x + rayTargetX) / 2.0);
-            if (index > MAP_AREA) index = -1;
-            if (index < 0) index = -1;
+            if (index > MAP_AREA) return;
+            if (index < 0) return;
             if (debug)
                 fb.drawRect(rayPos.x * mapSquareSize, rayPos.y * mapSquareSize,
                             1, 1, Color(100, 30, 200));
+            auto being = map.beings[index];
+            auto wall = map.walls[index];
+            if (being || wall) {
+                double dist = (rayPos - player.getPos()).dot(player.dir.norm());
+                Side side = verticalSide ? (xDir ? Side::west : Side::east)
+                                         : (yDir ? Side::north : Side::south);
+                if (being) beings[screenX] = DdaHit(index, dist, wallPos, side);
+                if (wall) walls[screenX] = DdaHit(index, dist, wallPos, side);
+            }
         }
-        if (index != -1 && map[index]) {
-            double dist = (rayPos - player.pos).dot(player.dir.norm());
-            Side side = verticalSide ? (xDir ? Side::west : Side::east)
-                                     : (yDir ? Side::north : Side::south);
-            int normalIndex = index;
-            switch (side) {
-                case Side::north:
-                    normalIndex -= MAP_SIZE;
-                    break;
-                case Side::west:
-                    normalIndex -= 1;
-                    wallPos = 1 - wallPos;
-                    break;
-                case Side::south:
-                    normalIndex += MAP_SIZE;
-                    wallPos = 1 - wallPos;
-                    break;
-                case Side::east:
-                    normalIndex += 1;
-                    break;
-            };
-            return DdaHit{index, dist, wallPos, normalIndex};
-        } else
-            return std::nullopt;
     }
 
     int mapSquareSize = fb.height / MAP_SIZE;
@@ -199,13 +243,13 @@ struct Renderer3D {
                         Color(255, 255, 255), true);
         };
 
-        drawW(player.pos);
+        drawW(player.getPos());
 
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
             Vec2D ray =
                 player.dir + (player.cam() * (screenX / columns * 2.0 - 1.0));
-            dda(player, ray, true);
+            dda(player, ray, screenX, true);
         }
     }
 };

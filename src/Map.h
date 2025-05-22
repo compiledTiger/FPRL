@@ -12,16 +12,18 @@ struct Map {
     Texture<32, 32>* walls[length * length];
     Texture<32, 32>* floor[length * length];
     Texture<32, 32>* ceiling[length * length];
+    Texture<32, 32>* beings[length * length];
     int darknessLevel[length * length];
 
     std::vector<Texture<32, 32>> textures;
     std::unordered_map<std::string, int> textureMap;
 
     // walls() sets values to nullptr
-    Map() : walls(), floor(), ceiling(), darknessLevel() {
+    Map() : walls(), floor(), ceiling(), beings(), darknessLevel() {
         // TODO destroy
         loadTexture("assets/rltiles/nh-dngn/floor_of_a_room.bmp", "stone");
         loadTexture("assets/rltiles/dc-dngn/dngn_enter_shop.bmp", "shop");
+        loadTexture("assets/rltiles/dc-mon0/f/fungus.bmp", "fungus");
     }
     Texture<32, 32>*& operator[](int i) { return walls[i]; }
 
@@ -58,11 +60,12 @@ struct Map {
         connectRooms(mid2, mid5);
         connectRooms(mid5, mid6);
         // TODO player seems to be able to spawn on shop tiles!
-        return mid1 + Vec2D(0.5, 0.5);
+        return mid1;
     }
 
     Vec2D genRoom() {
         Texture<32, 32>* shop = &textures[textureMap["shop"]];
+        Texture<32, 32>* fungus = &textures[textureMap["fungus"]];
 
         int roomWidth = (rand() % 8) + 2;
         int roomHeight = (rand() % 8) + 2;
@@ -77,6 +80,7 @@ struct Map {
                     at(x, y - 1) = shop;
                 if (x == roomNWCornerX && y - roomNWCornerY == 3)
                     at(x - 1, y) = shop;
+                if (x - roomNWCornerX == 3 && y - roomNWCornerY == 2) beings[x + y * MAP_SIZE] = fungus;
             }
             dl -= 4;
             if (dl < 0) dl = 0;

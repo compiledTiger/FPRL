@@ -10,8 +10,9 @@ int main(int argc, char* argv[]) {
 
     Map<MAP_SIZE> map;
     Vec2D startingPos = map.generate();
+    std::cout << startingPos.x << " "  << startingPos.y << std::endl;
 
-    Being player(startingPos);
+    Being player(&map, startingPos.x, startingPos.y);
     ++player.targetDir;
     ++player.targetDir;
 
@@ -59,7 +60,7 @@ int main(int argc, char* argv[]) {
             quit = quit || keyboard[SDL_SCANCODE_ESCAPE];
             debug = keyboard[SDL_SCANCODE_D];
 
-            player.update(map);
+            player.update();
 
             ++ticks;
             if (ticks % ticksPerSecond == 0) {
