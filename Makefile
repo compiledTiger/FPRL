@@ -1,6 +1,6 @@
 CC = g++
 
-COMPILER_FLAGS = -g -Wall
+CPPFLAGS = -g -Wall
 
 LINKER_FLAGS = -lSDL2
 
@@ -14,9 +14,9 @@ all: $(APP_NAME)
 clean:
 	rm -rf $(OBJS)
 
-App.o : src/App.cc
+App.o : src/App.cc src/*.h
 
-Map.o : src/Map.cc
+Map.o : src/Map.cc src/*.h
 
 $(APP_NAME) : $(OBJS)
 	$(CC) $^ $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $@
