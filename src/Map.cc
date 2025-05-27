@@ -36,7 +36,7 @@ Vec2D Map<MAP_SIZE>::generate() {
 template <int length_>
 Vec2D Map<length_>::genRoom() {
     Texture<32, 32>* shop = &textures[textureMap["shop"]];
-    Texture<32, 32>* fungus = &textures[textureMap["fungus"]];
+    Texture<32, 32>* orc = &textures[textureMap["orc"]];
 
     int roomWidth = (rand() % 8) + 2;
     int roomHeight = (rand() % 8) + 2;
@@ -53,7 +53,7 @@ Vec2D Map<length_>::genRoom() {
                 at(x - 1, y) = shop;
             if (x - roomNWCornerX == 3 && y - roomNWCornerY == 2)
                 // TODO place in a container
-                new Being(this, x, y, fungus);
+                new Being(this, x, y, orc);
         }
         dl -= 4;
         if (dl < 0) dl = 0;

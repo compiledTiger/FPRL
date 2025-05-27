@@ -81,3 +81,8 @@ struct Vec2D {
         return *this;
     }
 };
+
+inline std::ostream & operator<<(std::ostream & os, const Vec2D & v) {
+    os << "Vec2D(" << v.x << ", " << v.y << ")";
+    return os;
+}

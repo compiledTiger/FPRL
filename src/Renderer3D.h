@@ -151,8 +151,8 @@ struct Renderer3D {
         double ratio = ray.x / ray.y + 1e-30;
         int xDir = ray.x > 0;
         int yDir = ray.y > 0;
-        int rayTargetX = (int)rayPos.x + xDir;
-        int rayTargetY = (int)rayPos.y + yDir;
+        double rayTargetX = (int)rayPos.x + xDir;
+        double rayTargetY = (int)rayPos.y + yDir;
         double wallPos = 0;
         bool verticalSide;
         double wallDistX;
@@ -172,13 +172,13 @@ struct Renderer3D {
                     (wallDistY * ratio) * (wallDistY * ratio)) {
                 rayPos.x += wallDistX;
                 rayPos.y += wallDistX / ratio;
-                rayTargetX += xDir * 2 - 1;
+                rayTargetX += (xDir * 2 - 1) / 2.0;
                 wallPos = rayPos.y - (int)rayPos.y;
                 verticalSide = true;
             } else {
                 rayPos.y += wallDistY;
                 rayPos.x += wallDistY * ratio;
-                rayTargetY += yDir * 2 - 1;
+                rayTargetY += (yDir * 2 - 1) / 2.0;
                 wallPos = rayPos.x - (int)rayPos.x;
                 verticalSide = false;
             }
@@ -187,14 +187,19 @@ struct Renderer3D {
                 rayPos.y >= map.length)
                 break;
 
+            // TODO this need to be updated!
             index = (int)((rayPos.y + rayTargetY) / 2.0) * MAP_SIZE +
                     (int)((rayPos.x + rayTargetX) / 2.0);
             if (index > MAP_AREA) return;
             if (index < 0) return;
 
+            bool atEdge = verticalSide ? int(rayPos.x * 2) % 2 == 0
+                                       : int(rayPos.y * 2) % 2 == 0;
+            // std::cout << rayPos << " " << rayTargetX << " " << rayTargetY
+            //           << " " << verticalSide << " " << atEdge << std::endl;
             if (debug)
                 fb.drawRect(rayPos.x * mapSquareSize, rayPos.y * mapSquareSize,
-                            1, 1, Color(100, 30, 200));
+                            1, 1, Color(100, 30 + 100 * atEdge, 200));
 
             FixedDir side = verticalSide
                                 ? (xDir ? FixedDir::Dir::w : FixedDir::Dir::e)
@@ -219,34 +224,26 @@ struct Renderer3D {
                     // TODO nw, ne, sw, se
                     break;
             }
-            if (map.walls[index]) {
-                double dist = (rayPos - player.getPos()).dot(player.dir.norm());
-                walls[screenX] = DdaHit{index, dist, wallPos, normalIndex};
-            }
 
-            auto* being = map.beings[index];
-            int beingIndex = index;
-            if (!(being && being->targetDir == side)) {
-                // TODO OOB?
-                being = map.beings[normalIndex];
-                if (being == &player)
-                    being = nullptr;
-                else {
-                    beingIndex = normalIndex;
+            if (atEdge) {
+                if (map.walls[index]) {
+                    double dist =
+                        (rayPos - player.getPos()).dot(player.dir.norm());
+                    walls[screenX] = DdaHit{index, dist, wallPos, normalIndex};
+                }
+            } else {
+                auto* being = map.beings[index];
+                if (being && being->targetDir != side) {
                     side = side + 4;
                     switch (side.dir) {
                         case FixedDir::Dir::n:
-                            normalIndex -= MAP_SIZE;
                             wallPos = 1 - wallPos;
                             break;
                         case FixedDir::Dir::w:
-                            normalIndex -= 1;
                             break;
                         case FixedDir::Dir::s:
-                            normalIndex += MAP_SIZE;
                             break;
                         case FixedDir::Dir::e:
-                            normalIndex += 1;
                             wallPos = 1 - wallPos;
                             break;
                         default:
@@ -254,11 +251,11 @@ struct Renderer3D {
                             break;
                     }
                 }
-            }
-            if ((being && being->targetDir == side && !beings[screenX])) {
-                double dist = (rayPos - player.getPos()).dot(player.dir.norm());
-                beings[screenX] =
-                    DdaHit{beingIndex, dist, wallPos, normalIndex};
+                if ((being && being->targetDir == side && !beings[screenX])) {
+                    double dist =
+                        (rayPos - player.getPos()).dot(player.dir.norm());
+                    beings[screenX] = DdaHit{index, dist, wallPos, normalIndex};
+                }
             }
         }
     }

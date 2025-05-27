@@ -25,7 +25,7 @@ struct Map {
         // TODO destroy
         loadTexture("assets/rltiles/nh-dngn/floor_of_a_room.bmp", "stone");
         loadTexture("assets/rltiles/dc-dngn/dngn_enter_shop.bmp", "shop");
-        loadTexture("assets/rltiles/dc-mon0/f/fungus.bmp", "fungus");
+        loadTexture("assets/rltiles/nh-mon0/o/uruk-hai.bmp", "orc");
     }
     Texture<32, 32>*& operator[](int i) { return walls[i]; }
 
