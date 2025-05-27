@@ -233,28 +233,53 @@ struct Renderer3D {
                 }
             } else {
                 auto* being = map.beings[index];
-                if (being && being->targetDir != side) {
-                    side = side + 4;
-                    switch (side.dir) {
-                        case FixedDir::Dir::n:
-                            wallPos = 1 - wallPos;
-                            break;
-                        case FixedDir::Dir::w:
-                            break;
-                        case FixedDir::Dir::s:
-                            break;
-                        case FixedDir::Dir::e:
-                            wallPos = 1 - wallPos;
-                            break;
-                        default:
-                            // TODO nw, ne, sw, se
-                            break;
+                if (being == &player) being = nullptr;
+                if (being) {
+                    if (being->targetDir != side) {
+                        if (being->targetDir - side == 4) {
+                            side = side + 4;
+                            switch (side.dir) {
+                                case FixedDir::Dir::n:
+                                    wallPos = 1 - wallPos;
+                                    break;
+                                case FixedDir::Dir::w:
+                                    break;
+                                case FixedDir::Dir::s:
+                                    break;
+                                case FixedDir::Dir::e:
+                                    wallPos = 1 - wallPos;
+                                    break;
+                                default:
+                                    // TODO nw, ne, sw, se
+                                    break;
+                            }
+                        } else {  // 90 degrees off
+                            being->targetDir = side;
+                            switch (side.dir) {
+                                case FixedDir::Dir::n:
+                                    wallPos = 1 - wallPos;
+                                    break;
+                                case FixedDir::Dir::w:
+                                    wallPos = 1 - wallPos;
+                                    break;
+                                case FixedDir::Dir::s:
+                                    wallPos = 1 - wallPos;
+                                    break;
+                                case FixedDir::Dir::e:
+                                    wallPos = 1 - wallPos;
+                                    break;
+                                default:
+                                    // TODO nw, ne, sw, se
+                                    break;
+                            }
+                        }
                     }
-                }
-                if ((being && being->targetDir == side && !beings[screenX])) {
-                    double dist =
-                        (rayPos - player.getPos()).dot(player.dir.norm());
-                    beings[screenX] = DdaHit{index, dist, wallPos, normalIndex};
+                    if (!beings[screenX]) {
+                        double dist =
+                            (rayPos - player.getPos()).dot(player.dir.norm());
+                        beings[screenX] =
+                            DdaHit{index, dist, wallPos, normalIndex};
+                    }
                 }
             }
         }

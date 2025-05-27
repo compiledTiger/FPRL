@@ -17,6 +17,12 @@ struct FixedDir {
         for (int i = 0; i < n; ++i) --copy;
         return copy;
     }
+    int operator-(const FixedDir& rhs) {
+        FixedDir copy = *this;
+        int i = 0;
+        for (; copy.dir != rhs.dir; ++i) ++copy;
+        return i;
+    }
     bool operator==(const FixedDir& rhs) const { return dir == rhs.dir; }
     bool operator!=(const FixedDir& rhs) const { return !(*this == rhs); }
 
