@@ -162,7 +162,7 @@ struct Renderer3D {
         beings[screenX] = std::nullopt;
 
         // *1.5 since diagonal distances are longer than the map size
-        while (map.walls[index] == nullptr && ++iter < MAP_SIZE * 1.5) {
+        while (++iter < MAP_SIZE * 1.5) {
             wallDistX = rayTargetX - rayPos.x;
             wallDistY = rayTargetY - rayPos.y;
 
@@ -230,6 +230,7 @@ struct Renderer3D {
                     double dist =
                         (rayPos - player.getPos()).dot(player.dir.norm());
                     walls[screenX] = DdaHit{index, dist, wallPos, normalIndex};
+                    return;
                 }
             } else {
                 auto* being = map.beings[index];

@@ -70,8 +70,10 @@ class Being {
     Vec2D getTargetPos() const { return targetPos; };
     void setTargetPos(Vec2D targetPos_) {
         targetPos = targetPos_;
+        auto being =
+            map->beings[int(targetPos.x) + int(targetPos.y) * MAP_SIZE];
         if (!map->walls[int(targetPos.x) + int(targetPos.y) * MAP_SIZE] &&
-            !map->beings[int(targetPos.x) + int(targetPos.y) * MAP_SIZE]) {
+            (!being || being == this)) {
             x = (int)targetPos.x;
             y = (int)targetPos.y;
             lastPos = targetPos;
