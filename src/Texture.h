@@ -116,7 +116,7 @@ struct Texture {
 
         int index = 0;
         unsigned char pixel[1];
-        while (fread(pixel, sizeof(unsigned char), 1, f) && index < area) {
+        while (fread(pixel, sizeof(unsigned char), 1, f)) {
             if (colorsUsed == 16) {
                 int paletteIndex1 = pixel[0] >> 4;
                 int paletteIndex2 = (unsigned char)(pixel[0] << 4) >> 4;
@@ -126,12 +126,12 @@ struct Texture {
                 Color color2(colorTable[paletteIndex2 * bytesPerColor + 2],
                              colorTable[paletteIndex2 * bytesPerColor + 1],
                              colorTable[paletteIndex2 * bytesPerColor]);
-                // std::cout << index << " " << paletteIndex1 << " " << color1
-                // << " " << paletteIndex2 << " " << color2 << std::endl;
+                 std::cout << index << " " << paletteIndex1 << " " << color1
+                 << " " << paletteIndex2 << " " << color2 << std::endl;
                 if (color1 == Color(0, 0, 0)) color1 = transp;
                 if (color2 == Color(0, 0, 0)) color2 = transp;
-                pixels[area - index] = color1;
-                pixels[area - index - 1] = color2;
+                pixels[area - index - 1] = color1;
+                pixels[area - index - 2] = color2;
                 // padding, 20 pixels stored in 10 bytes
                 // row bytes must be a multiple of 4, 12 is closest
                 index += 2;
@@ -152,10 +152,13 @@ struct Texture {
                 if (color == Color(71, 108, 108))  // TODO put somewhere
                     color = transp;
 
-                pixels[area - index] = color;
+                pixels[area - index - 1] = color;
                 index++;
             }
         }
+
+        for (int i = 0; i < area; ++i)
+            std::cout << ":" << pixels[i] << std::endl;
 
         calcDarknessLevels();
     }
