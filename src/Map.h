@@ -17,23 +17,31 @@ struct Map {
     Being* beings[length * length];
     int darknessLevel[length * length];
 
-    std::vector<Texture<32, 32>> textures;
+    std::vector<Texture<32, 32>> wallTextures;
+    std::vector<Texture<20, 20>> beingTextures;
     std::unordered_map<std::string, int> textureMap;
 
     // walls() sets values to nullptr
     Map() : walls(), floor(), ceiling(), beings(), darknessLevel() {
         // TODO destroy
-        loadTexture("assets/rltiles/nh-dngn/floor_of_a_room.bmp", "stone");
-        loadTexture("assets/rltiles/dc-dngn/dngn_enter_shop.bmp", "shop");
-        loadTexture("assets/rltiles/nh-mon0/o/uruk-hai.bmp", "orc");
+        loadWallTexture("assets/rltiles/nh-dngn/floor_of_a_room.bmp", "stone");
+        loadWallTexture("assets/rltiles/dc-dngn/dngn_enter_shop.bmp", "shop");
+        loadBeingTexture("assets/wee/bmps/gobwar.bmp", "gobwar");
     }
     Texture<32, 32>*& operator[](int i) { return walls[i]; }
 
-    void loadTexture(const std::string path, const std::string name) {
+    void loadWallTexture(const std::string path, const std::string name) {
         Texture<32, 32> t;
         t.loadBmp(path.c_str());
-        textures.push_back(t);
-        textureMap[name] = textures.size() - 1;
+        wallTextures.push_back(t);
+        textureMap[name] = wallTextures.size() - 1;
+    }
+
+    void loadBeingTexture(const std::string path, const std::string name) {
+        Texture<20, 20> t;
+        t.loadBmp(path.c_str());
+        beingTextures.push_back(t);
+        textureMap[name] = beingTextures.size() - 1;
     }
 
     Vec2D generate();

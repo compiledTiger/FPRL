@@ -33,3 +33,9 @@ struct Color {
                      (a + rhs.a) / 2);
     }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Color& c) {
+    os << "Color(" << (int)c.r << ", " << (int)c.g << ", " << (int)c.b << ", "
+       << (int)c.a << ")";
+    return os;
+}

@@ -26,10 +26,10 @@ class Being {
     bool moving = false;
     bool rotating = false;
     bool invalidMove = false;
-    Texture<32, 32>* texture;
+    Texture<20, 20>* texture;
 
     Being(Map<MAP_SIZE>* map_, int x_, int y_,
-          Texture<32, 32>* texture_ = nullptr)
+          Texture<20, 20>* texture_ = nullptr)
         : map(map_),
           x(x_),
           y(y_),

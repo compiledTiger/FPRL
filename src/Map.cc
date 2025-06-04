@@ -5,7 +5,7 @@
 // TODO
 template <>
 Vec2D Map<MAP_SIZE>::generate() {
-    Texture<32, 32>* stone = &textures[textureMap["stone"]];
+    Texture<32, 32>* stone = &wallTextures[textureMap["stone"]];
 
     for (int y = 0; y < length; ++y) {
         for (int x = 0; x < length; ++x) {
@@ -35,8 +35,8 @@ Vec2D Map<MAP_SIZE>::generate() {
 
 template <int length_>
 Vec2D Map<length_>::genRoom() {
-    Texture<32, 32>* shop = &textures[textureMap["shop"]];
-    Texture<32, 32>* orc = &textures[textureMap["orc"]];
+    Texture<32, 32>* shop = &wallTextures[textureMap["shop"]];
+    Texture<20, 20>* gobwar = &beingTextures[textureMap["gobwar"]];
 
     int roomWidth = (rand() % 8) + 2;
     int roomHeight = (rand() % 8) + 2;
@@ -53,7 +53,7 @@ Vec2D Map<length_>::genRoom() {
                 at(x - 1, y) = shop;
             if (x - roomNWCornerX == 3 && y - roomNWCornerY == 2)
                 // TODO place in a container
-                new Being(this, x, y, orc);
+                new Being(this, x, y, gobwar);
         }
         dl -= 4;
         if (dl < 0) dl = 0;

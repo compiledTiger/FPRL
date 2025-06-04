@@ -83,6 +83,7 @@ struct Texture {
         FILE* f = fopen(path, "rb");
         unsigned char header[54];
         fread(header, sizeof(unsigned char), 54, f);
+        int dibHeaderSize = *(int*)&header[14];
         int w = *(int*)&header[18];
         int h = *(int*)&header[22];
         int bitsPerPixel = *(int*)&header[28];
@@ -93,26 +94,67 @@ struct Texture {
                   << "x" << h << ", " << colorsUsed << " colors used and "
                   << bitsPerPixel << " bits per pixel" << std::endl;
 
+        fseek(f, dibHeaderSize - 40, SEEK_CUR);
+
         int bytesPerColor = 4;
         int sizeOfColorTable = colorsUsed * bytesPerColor;
         unsigned char* colorTable = new unsigned char[sizeOfColorTable];
         fread(colorTable, sizeof(unsigned char), sizeOfColorTable, f);
 
+        if (colorsUsed == 16) {
+            for (int paletteIndex1 = 0; paletteIndex1 < colorsUsed;
+                 ++paletteIndex1) {
+                Color color1(colorTable[paletteIndex1 * bytesPerColor + 2],
+                             colorTable[paletteIndex1 * bytesPerColor + 1],
+                             colorTable[paletteIndex1 * bytesPerColor]);
+                std::cout << "WEE " << paletteIndex1 << " " << color1
+                          << std::endl;
+            }
+        }
+
+        Color transp(0, 0, 0, 0);
+
         int index = 0;
         unsigned char pixel[1];
-        while (fread(pixel, sizeof(unsigned char), 1, f)) {
-            Color color(colorTable[pixel[0] * bytesPerColor + 2],
-                        colorTable[pixel[0] * bytesPerColor + 1],
-                        colorTable[pixel[0] * bytesPerColor]);
+        while (fread(pixel, sizeof(unsigned char), 1, f) && index < area) {
+            if (colorsUsed == 16) {
+                int paletteIndex1 = pixel[0] >> 4;
+                int paletteIndex2 = (unsigned char)(pixel[0] << 4) >> 4;
+                Color color1(colorTable[paletteIndex1 * bytesPerColor + 2],
+                             colorTable[paletteIndex1 * bytesPerColor + 1],
+                             colorTable[paletteIndex1 * bytesPerColor]);
+                Color color2(colorTable[paletteIndex2 * bytesPerColor + 2],
+                             colorTable[paletteIndex2 * bytesPerColor + 1],
+                             colorTable[paletteIndex2 * bytesPerColor]);
+                // std::cout << index << " " << paletteIndex1 << " " << color1
+                // << " " << paletteIndex2 << " " << color2 << std::endl;
+                if (color1 == Color(0, 0, 0)) color1 = transp;
+                if (color2 == Color(0, 0, 0)) color2 = transp;
+                pixels[area - index] = color1;
+                pixels[area - index - 1] = color2;
+                // padding, 20 pixels stored in 10 bytes
+                // row bytes must be a multiple of 4, 12 is closest
+                index += 2;
+                if ((index) % w == 0) {
+                    std::cout << "!" << std::endl;
+                    fseek(f, 2, SEEK_CUR);
+                }
+            } else {
+                Color color = Color(colorTable[pixel[0] * bytesPerColor + 2],
+                                    colorTable[pixel[0] * bytesPerColor + 1],
+                                    colorTable[pixel[0] * bytesPerColor]);
 
-            std::cout << (int)color.r << " " << (int)color.g << " "
-                      << (int)color.b << " " << (int)color.a << std::endl;
+                // std::cout << (int)color.r << " " << (int)color.g << " "
+                //           << (int)color.b << " " << (int)color.a <<
+                //           std::endl;
 
-            if (color != Color(71, 108, 108))  // TODO put somewhere
+                // TODO only for rltiles
+                if (color == Color(71, 108, 108))  // TODO put somewhere
+                    color = transp;
+
                 pixels[area - index] = color;
-            else
-                pixels[area - index] = Color(0, 0, 0, 0);
-            index++;
+                index++;
+            }
         }
 
         calcDarknessLevels();

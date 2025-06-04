@@ -109,7 +109,8 @@ struct Renderer3D {
             if (hit) {
                 double wallHeight = calcHeight(hit->dist);
 
-                double wallTop = (double(fb.height) - wallHeight) / 2.0;
+                double wallTop = (double(fb.height) - wallHeight) / 2.0 +
+                                 double(fb.height) * 0.25 / hit->dist;
                 int screenY = std::max(wallTop, 0.0);
 
                 auto* wallTexture = map.beings[hit->mapIndex]->texture;
@@ -193,14 +194,6 @@ struct Renderer3D {
             if (index > MAP_AREA) return;
             if (index < 0) return;
 
-            bool atEdge = verticalSide ? int(rayPos.x * 2) % 2 == 0
-                                       : int(rayPos.y * 2) % 2 == 0;
-            // std::cout << rayPos << " " << rayTargetX << " " << rayTargetY
-            //           << " " << verticalSide << " " << atEdge << std::endl;
-            if (debug)
-                fb.drawRect(rayPos.x * mapSquareSize, rayPos.y * mapSquareSize,
-                            1, 1, Color(100, 30 + 100 * atEdge, 200));
-
             FixedDir side = verticalSide
                                 ? (xDir ? FixedDir::Dir::w : FixedDir::Dir::e)
                                 : (yDir ? FixedDir::Dir::n : FixedDir::Dir::s);
@@ -225,11 +218,24 @@ struct Renderer3D {
                     break;
             }
 
+            bool atEdge = verticalSide ? int(rayPos.x * 2) % 2 == 0
+                                       : int(rayPos.y * 2) % 2 == 0;
+            // std::cout << rayPos << " " << rayTargetX << " " << rayTargetY
+            //           << " " << verticalSide << " " << atEdge << std::endl;
+
+            if (debug)
+                fb.drawRect(rayPos.x * mapSquareSize, rayPos.y * mapSquareSize,
+                            1, 1, Color(100, 30 + 100 * atEdge, 200));
+
             if (atEdge) {
                 if (map.walls[index]) {
                     double dist =
                         (rayPos - player.getPos()).dot(player.dir.norm());
                     walls[screenX] = DdaHit{index, dist, wallPos, normalIndex};
+                    if (debug)
+                        fb.drawRect(rayPos.x * mapSquareSize,
+                                    rayPos.y * mapSquareSize, 1, 1,
+                                    Color(255, 30, 0));
                     return;
                 }
             } else {
@@ -238,7 +244,7 @@ struct Renderer3D {
                 if (being) {
                     if (being->targetDir != side) {
                         if (being->targetDir - side == 4) {
-                            side = side + 4;
+                            /*
                             switch (side.dir) {
                                 case FixedDir::Dir::n:
                                     wallPos = 1 - wallPos;
@@ -253,33 +259,19 @@ struct Renderer3D {
                                 default:
                                     // TODO nw, ne, sw, se
                                     break;
-                            }
-                        } else {  // 90 degrees off
-                            being->targetDir = side;
-                            switch (side.dir) {
-                                case FixedDir::Dir::n:
-                                    wallPos = 1 - wallPos;
-                                    break;
-                                case FixedDir::Dir::w:
-                                    wallPos = 1 - wallPos;
-                                    break;
-                                case FixedDir::Dir::s:
-                                    wallPos = 1 - wallPos;
-                                    break;
-                                case FixedDir::Dir::e:
-                                    wallPos = 1 - wallPos;
-                                    break;
-                                default:
-                                    // TODO nw, ne, sw, se
-                                    break;
-                            }
+                            }*/
                         }
                     }
+                    // rita bara om side är samma eller diff 4 (då flippa)
                     if (!beings[screenX]) {
                         double dist =
                             (rayPos - player.getPos()).dot(player.dir.norm());
                         beings[screenX] =
                             DdaHit{index, dist, wallPos, normalIndex};
+                        if (debug)
+                            fb.drawRect(rayPos.x * mapSquareSize,
+                                        rayPos.y * mapSquareSize, 1, 1,
+                                        Color(255, 30 + 100, 200));
                     }
                 }
             }
