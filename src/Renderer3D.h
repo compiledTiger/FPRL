@@ -150,36 +150,43 @@ struct Renderer3D {
         int index = (int)rayPos.y * MAP_SIZE + (int)rayPos.x;
         int iter = 0;
         double ratio = ray.x / ray.y + 1e-30;
-        int xDir = ray.x > 0;
-        int yDir = ray.y > 0;
-        double rayTargetX = (int)rayPos.x + xDir;
-        double rayTargetY = (int)rayPos.y + yDir;
+
+        int xDir = ray.x > 0; // west or east
+        int yDir = ray.y > 0; // north or south
+        const double initialXStep = (int)rayPos.x + xDir - rayPos.x;
+        const double initialYStep = (int)rayPos.y + yDir - rayPos.y;
+        Vec2D xStep (initialXStep, initialXStep/ratio);
+        Vec2D yStep (initialYStep*ratio, initialYStep);
+        Vec2D rayTargetX = rayPos + xStep;
+        Vec2D rayTargetY = rayPos + yStep;
+        const double laterXStep = (xDir * 2 - 1) / 2.0;
+        const double laterYStep = (yDir * 2 - 1) / 2.0;
+        xStep = Vec2D (laterXStep, laterXStep / ratio);
+        yStep = Vec2D (laterYStep * ratio, laterYStep);
+
         double wallPos = 0;
         bool verticalSide;
-        double wallDistX;
-        double wallDistY;
+        Vec2D wallDistX (0, 0);
+        Vec2D wallDistY (0, 0);
 
         walls[screenX] = std::nullopt;
         beings[screenX] = std::nullopt;
 
         // *1.5 since diagonal distances are longer than the map size
         while (++iter < MAP_SIZE * 1.5) {
-            wallDistX = rayTargetX - rayPos.x;
-            wallDistY = rayTargetY - rayPos.y;
+            wallDistX = rayTargetX - rayPos;
+            wallDistY = rayTargetY - rayPos;
 
-            if (wallDistX * wallDistX +
-                    (wallDistX / ratio) * (wallDistX / ratio) <
-                wallDistY * wallDistY +
-                    (wallDistY * ratio) * (wallDistY * ratio)) {
-                rayPos.x += wallDistX;
-                rayPos.y += wallDistX / ratio;
-                rayTargetX += (xDir * 2 - 1) / 2.0;
+            // TODO skip square root here
+            if (wallDistX.mag () <
+                wallDistY.mag ()) {
+                rayPos += wallDistX;
+                rayTargetX += xStep;
                 wallPos = rayPos.y - (int)rayPos.y;
                 verticalSide = true;
             } else {
-                rayPos.y += wallDistY;
-                rayPos.x += wallDistY * ratio;
-                rayTargetY += (yDir * 2 - 1) / 2.0;
+                rayPos += wallDistY;
+                rayTargetY += yStep;
                 wallPos = rayPos.x - (int)rayPos.x;
                 verticalSide = false;
             }
@@ -189,8 +196,8 @@ struct Renderer3D {
                 break;
 
             // TODO this need to be updated!
-            index = (int)((rayPos.y + rayTargetY) / 2.0) * MAP_SIZE +
-                    (int)((rayPos.x + rayTargetX) / 2.0);
+            index = (int)((rayPos.y + rayTargetY.y) / 2.0) * MAP_SIZE +
+                    (int)((rayPos.x + rayTargetX.x) / 2.0);
             if (index > MAP_AREA) return;
             if (index < 0) return;
 
