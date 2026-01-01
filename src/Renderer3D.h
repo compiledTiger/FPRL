@@ -178,8 +178,8 @@ struct Renderer3D {
             wallDistY = rayTargetY - rayPos;
 
             // TODO skip square root here
-            if (wallDistX.mag () <
-                wallDistY.mag ()) {
+            if (wallDistX.squaredMag () <
+                wallDistY.squaredMag ()) {
                 rayPos += wallDistX;
                 rayTargetX += xStep;
                 wallPos = rayPos.y - (int)rayPos.y;
