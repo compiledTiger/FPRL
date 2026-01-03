@@ -8,6 +8,8 @@ struct Vec2D {
     double x;
     double y;
 
+    Vec2D() : x(0), y(0) {}
+
     Vec2D(double x_, double y_) : x(x_), y(y_) {}
 
     Vec2D(FixedDir dir) {
