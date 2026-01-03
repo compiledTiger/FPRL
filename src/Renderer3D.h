@@ -2,10 +2,10 @@
 
 #include "Being.h"
 #include "Color.h"
+#include "Dda.h"
 #include "FrameBuffer.h"
 #include "Map.h"
 #include "Mat2D.h"
-#include "Dda.h"
 
 struct Renderer3D {
     FrameBuffer & fb;
@@ -130,24 +130,13 @@ struct Renderer3D {
     }
 
     void rayCast(const Being & player) {
+        Dda dda(player, map);
         Vec2D ray = player.dir - player.cam() * fov;
         Vec2D dRay = player.cam() * fov * (2.0 / fb.width);
         for (int screenX = 0; screenX < fb.width; ++screenX) {
-            dda(player, ray, screenX);
-            dda(player, ray, screenX);
+            dda.run(ray, walls[screenX], beings[screenX], nullptr);
             ray += dRay;
         }
-    }
-
-    void dda(const Being & player, Vec2D ray, int screenX, bool debug = false) {
-        Dda dda(player, ray, map, &fb);
-        beings[screenX] = std::nullopt;
-        walls[screenX] = std::nullopt;
-        auto res = dda.run();
-        if (res.being)
-            beings[screenX] = *res.being;
-        if (res.wall)
-            walls[screenX] = *res.wall;
     }
 
     int mapSquareSize = fb.height / MAP_SIZE;
@@ -167,11 +156,12 @@ struct Renderer3D {
 
         drawW(player.getPos());
 
+        Dda dda(player, map);
         int columns = fb.width;
         for (double screenX = 0; screenX < columns; ++screenX) {
             Vec2D ray =
                 player.dir + (player.cam() * (screenX / columns * 2.0 - 1.0));
-            dda(player, ray, screenX, true);
+            dda.run(ray, walls[(int)screenX], beings[(int)screenX], &fb);
         }
     }
 };
