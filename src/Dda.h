@@ -121,33 +121,18 @@ class Dda {
                     return;
                 }
             } else {
-                std::cout << "looking for beings" << std::endl;
                 auto * being = map.beings[index];
                 if (being == &player)
                     being = nullptr;
                 if (being) {
-                    if (being->targetDir != side) {
-                        if (being->targetDir - side == 4) {
-                            /*
-                            switch (side.dir) {
-                                case FixedDir::Dir::n:
-                                    wallPos = 1 - wallPos;
-                                    break;
-                                case FixedDir::Dir::w:
-                                    break;
-                                case FixedDir::Dir::s:
-                                    break;
-                                case FixedDir::Dir::e:
-                                    wallPos = 1 - wallPos;
-                                    break;
-                                default:
-                                    // TODO nw, ne, sw, se
-                                    break;
-                            }*/
-                        }
+                    bool drawBeing = false;
+                    if (being->targetDir == side) {
+                        drawBeing = true;
+                    } else if (being->targetDir - side == 4) {
+                        drawBeing = true;
+                        wallPos = 1 - wallPos;
                     }
-                    // rita bara om side är samma eller diff 4 (då flippa)
-                    if (true) { // TODO
+                    if (drawBeing) {
                         double dist =
                             (rayPos - player.getPos()).dot(player.dir.norm());
                         if (debugFb)
@@ -155,8 +140,9 @@ class Dda {
                                 rayPos.x * (debugFb->height / MAP_SIZE),
                                 rayPos.y * (debugFb->height / MAP_SIZE), 1, 1,
                                 Color(255, 30 + 100, 200));
-                        beingHit = DdaHit{index, dist, wallPos, normalIndex};
-                        std::cout << "HIT A BEING" << std::endl;
+                        if (!beingHit)
+                            beingHit =
+                                DdaHit{index, dist, wallPos, normalIndex};
                     }
                 }
             }
