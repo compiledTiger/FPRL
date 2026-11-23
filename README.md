@@ -91,4 +91,4 @@ Run it from the root of the repository, since assets are loaded by relative path
 ## Credits
 
 - Dungeon tiles: [RLTiles](http://rltiles.sf.net), public domain
-- Monster sprite: the RLTiles floating eye, cropped to 20×20 (stored as `assets/wee/bmps/gobwar.bmp`)
+- Monster sprite: the RLTiles goblin, scaled to 20×20 (stored as `assets/goblin.bmp`)
