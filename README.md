@@ -6,7 +6,7 @@ SDL2 is only used to open a window, read the keyboard and show the finished
 frame.
 
 <p align="center">
-  <img src="docs/images/gameplay.gif" width="600" alt="Walking through a randomly generated dungeon">
+  <img src="docs/images/dungeon.gif" width="600" alt="Walking through a randomly generated dungeon">
 </p>
 
 ## Features
